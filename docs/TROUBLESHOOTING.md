@@ -14,8 +14,8 @@ Before changing anything, record:
 - selected source and voice;
 - runtime state and stable blocker/error code;
 - on Linux, PipeWire and WirePlumber versions;
-- on Windows, whether a Microsoft-signed Persona Voice Sink is installed and the app's Volume Mixer
-  output assignment;
+- on Windows, whether VB-CABLE is installed, Windows was restarted afterward, and the app's Volume
+  Mixer output assignment;
 - the smallest relevant redacted log excerpt and exact failing command.
 
 Do not attach audio or a complete log unless necessary and safe. Logs can contain local paths,
@@ -132,25 +132,22 @@ If the helper reports route restoration unproven, stop the source app and Person
 PipeWire graph/session, and do not start another conversion until normal playback and bypass state
 are confirmed.
 
-## Windows driver or route is not ready
+## Windows VB-CABLE route is not ready
 
 ### Windows build is too old
 
 Process-scoped WASAPI loopback requires build 20348 or newer. The engine profile does not override
 that OS audio requirement.
 
-### Persona Voice Sink is missing or unsigned
+### VB-CABLE is missing
 
-The repository includes a render-only virtual-sink source and can build an unsigned Hardware Dev
-Center submission payload. A clean Windows system requires the resulting package to be signed by
-Microsoft. The elevated Persona Voice installer is the only supported install/remove boundary for
-the fixed signed files. Do not enable test-signing, disable signature enforcement, or copy an
-unsigned driver into a public artifact.
+Persona Voice does not bundle a virtual-audio driver. Choose **Get VB-CABLE** in onboarding or
+Settings, download it from the official VB-Audio page, extract the archive, run the x64 setup as
+administrator, and restart Windows. Then reopen Persona Voice and choose **Check again**.
 
-Packaging similarly requires `CODEX_PERSONA_VOICE_SIGNED_DRIVER_DIR` and verifies the kernel-policy
-signature with `/kp`, including the catalog binding to both the exact INF and SYS, before copying the
-fixed files. Until that external signing gate is complete, there is no clean functional Windows
-binary. Source/contract tests are not physical-GPU or clean-machine evidence.
+The route helper recognizes the base VB-CABLE playback endpoint by the signed driver's stable
+endpoint description and adapter properties. Renaming another output to “CABLE Input” does not make
+it eligible. Additional CABLE A/B/C/D products are not substituted for the base endpoint.
 
 ### Route verifier asks for Volume Mixer assignment
 
@@ -159,18 +156,17 @@ and does not mutate per-app policy. With Persona Voice stopped:
 
 1. open ChatGPT/Codex and start real voice/audio playback so a live session exists;
 2. open **Settings → System → Sound → Volume mixer**;
-3. set the selected app's output to **Persona Voice Sink**;
+3. set the selected app's output to **CABLE Input (VB-Audio Virtual Cable)**;
 4. return to Persona Voice and choose **Verify route**; bounded standby starts only after live proof;
 5. Start swaps standby to conversion; Stop returns to 40 ms/250 ms bounded physical-output standby;
 6. before quit/uninstall, restore the app to **Default** or the physical output;
 7. in the quit dialog choose **I've restored it** only after the change. **Cancel** and **Open Volume
-   Mixer** leave the route owned for recovery. The elevated uninstaller uses the same restore-first
-   boundary before removing the driver.
+   Mixer** leave the route owned for recovery.
 
 Windows notifications are not guaranteed to precede the first audio frame. A route-membership loss
 or manual-restore request is a real lifecycle boundary, not a cosmetic warning. A crash/force-kill
-can leave the OS-owned per-app preference pointing at Persona Voice Sink; verify it manually before
-restarting or uninstalling.
+can leave the OS-owned per-app preference pointing at VB-CABLE Input; verify it manually before
+restarting or removing VB-CABLE.
 
 ## Native helper does not build or self-test
 
@@ -184,7 +180,7 @@ bun run test:native
 - macOS requires Xcode Command Line Tools and Core Audio frameworks;
 - Linux requires a C++20 compiler, `pkg-config`, PipeWire development headers, and a running
   PipeWire session for native self-tests;
-- Windows requires MSVC, CMake, and the Windows SDK. Driver source additionally needs the WDK.
+- Windows requires MSVC, CMake, and the Windows SDK.
 
 Include the first compiler/helper error, not only the final script exit.
 
@@ -214,7 +210,7 @@ Armed/idle behavior is platform-specific:
 
 - macOS observes duplex I/O with no tap attached;
 - Linux keeps the owned policy bypass audible and waits to prove ingress capture plus bypass mute;
-- Windows may keep bounded standby passthrough after the app is assigned to Persona Voice Sink and
+- Windows may keep bounded standby passthrough after the app is assigned to VB-CABLE Input and
   waits for current live-session membership proof.
 
 Begin a real voice session and wait for assistant audio, not only UI animation. Do not interpret

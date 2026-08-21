@@ -16,11 +16,3 @@ endfunction()
 cpv_windows_helper(cpv-audio-capture ProcessLoopbackCapture.cpp)
 cpv_windows_helper(cpv-audio-output WasapiOutput.cpp)
 cpv_windows_helper(cpv-audio-route AudioPolicyRoute.cpp)
-cpv_windows_helper(cpv-driver-manager DriverManager.cpp)
-target_link_libraries(cpv-driver-manager PRIVATE newdev setupapi wintrust crypt32)
-target_link_options(cpv-driver-manager PRIVATE
-  "/MANIFEST:EMBED"
-  "/MANIFESTUAC:NO"
-  "/MANIFESTINPUT:${CMAKE_CURRENT_SOURCE_DIR}/DriverManager.manifest")
-set_property(TARGET cpv-driver-manager APPEND PROPERTY
-  LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/DriverManager.manifest")

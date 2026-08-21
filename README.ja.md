@@ -76,9 +76,10 @@ https://github.com/user-attachments/assets/f43f9f90-a76f-4984-b061-145aa7db5467
 
 ### ダウンロードして使う
 
-[Releases](https://github.com/miuuyy/ChatGPT-Persona-Voice/releases/latest) から最新の macOS または
-Linux 版をダウンロードできます。Windows は、必要な仮想オーディオドライバーが
-Microsoft によって署名されるまでソースのみです。
+[Releases](https://github.com/miuuyy/ChatGPT-Persona-Voice/releases/latest) から最新の macOS、
+Windows、Linux 版をダウンロードできます。Windows の設定画面から公式
+[VB-CABLE](https://vb-audio.com/Cable/) を開き、別途インストールして Windows を再起動した後、
+アプリ内の音量ミキサー手順に従ってください。
 
 1. Persona Voice を起動し、案内に従ってエンジンとシステム音声を設定します。
 2. ChatGPT または Codex を開き、Persona Voice で対象アプリと変換先の声を選びます。
@@ -100,6 +101,7 @@ Microsoft によって署名されるまでソースのみです。
   MSVC／CMake／Windows SDK
 - エンジン容量：macOS はインストール約 2.5 GiB・空き 6 GiB、Windows は約 9 GiB・
   空き 15 GiB、Linux は約 11 GiB・空き 15 GiB
+- Windows では、VB-Audio 公式の VB-CABLE ドライバも別途インストールする必要があります。
 
 ```bash
 git clone --recurse-submodules https://github.com/miuuyy/ChatGPT-Persona-Voice.git
@@ -119,7 +121,7 @@ Linux のソース実行には PipeWire と WirePlumber も必要です。プラ
 | --- | --- | --- |
 | Apple Silicon macOS 14.2+ | プレビューパッケージあり | MPS。本番署名／公証とクリーンマシン検証は未完了 |
 | Linux x64 + NVIDIA | プレビューパッケージあり | CUDA 13.0、PipeWire、WirePlumber。より広いディストリビューション対応は未検証 |
-| Windows x64 + NVIDIA、build 20348+ | ソースのみ | 公開パッケージは Microsoft 署名済み仮想オーディオドライバー待ち |
+| Windows x64 + NVIDIA、build 20348+ | プレビューパッケージあり | CUDA 13.0 と別途インストールした VB-CABLE。実機フィードバックを歓迎 |
 | その他のホスト | 入手不可 | 非対応 |
 
 詳細は

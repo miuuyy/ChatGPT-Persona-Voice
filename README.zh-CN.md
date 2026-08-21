@@ -73,8 +73,9 @@ https://github.com/user-attachments/assets/f43f9f90-a76f-4984-b061-145aa7db5467
 
 ### 下载并使用
 
-从 [Releases](https://github.com/miuuyy/ChatGPT-Persona-Voice/releases/latest) 下载最新的 macOS 或 Linux 版本。
-Windows 目前仅提供源码，需等待 Microsoft 签名所需的虚拟音频驱动。
+从 [Releases](https://github.com/miuuyy/ChatGPT-Persona-Voice/releases/latest) 下载最新的 macOS、Windows 或 Linux 版本。
+Windows 设置会打开官方 [VB-CABLE](https://vb-audio.com/Cable/) 下载页面；请单独安装、重启
+Windows，然后按应用内的音量合成器步骤操作。
 
 1. 启动 Persona Voice，按引导完成引擎与系统音频设置。
 2. 打开 ChatGPT 或 Codex，然后在 Persona Voice 中选择来源应用和目标声音。
@@ -93,6 +94,7 @@ Windows 目前仅提供源码，需等待 Microsoft 签名所需的虚拟音频�
   `pkg-config`/PipeWire 开发头文件，或 Windows 上的 MSVC/CMake/Windows SDK；
 - 引擎空间：macOS 安装约 2.5 GiB且至少空闲 6 GiB；Windows 安装约 9 GiB且至少空闲
   15 GiB；Linux 安装约 11 GiB且至少空闲 15 GiB。
+- Windows 还需要单独安装 VB-Audio 官方 VB-CABLE 驱动。
 
 ```bash
 git clone --recurse-submodules https://github.com/miuuyy/ChatGPT-Persona-Voice.git
@@ -111,7 +113,7 @@ Linux 源码运行还需要 PipeWire 和 WirePlumber。平台设置、原生构�
 | --- | --- | --- |
 | Apple Silicon macOS 14.2+ | 提供预览包 | MPS；仍需生产签名／公证和全新设备验证 |
 | Linux x64 + NVIDIA | 提供预览包 | CUDA 13.0、PipeWire 和 WirePlumber；仍需更广泛的发行版覆盖 |
-| Windows x64 + NVIDIA，build 20348+ | 仅源码 | 公开包需等待 Microsoft 签名的虚拟音频驱动 |
+| Windows x64 + NVIDIA，build 20348+ | 提供预览包 | CUDA 13.0 和单独安装的 VB-CABLE；欢迎提供实体 Windows 主机反馈 |
 | 其他主机 | 不可用 | 不支持 |
 
 详见[平台矩阵](docs/PLATFORM_MATRIX.md)与

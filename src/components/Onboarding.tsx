@@ -40,6 +40,7 @@ export function Onboarding({
     | "github"
     | "x"
     | "audio-refresh"
+    | "audio-download"
     | "audio-install"
     | "audio-activate"
     | "install"
@@ -107,6 +108,18 @@ export function Onboarding({
           ? await bridge.activatePlatformAudioSetup()
           : await bridge.refreshPlatformAudioSetup();
       setPlatformAudioSetup(result);
+    } catch (cause) {
+      setError(errorMessage(cause));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function openWindowsAudioSetupDownload() {
+    setBusy("audio-download");
+    setError(null);
+    try {
+      await bridge.openWindowsAudioSetupDownload();
     } catch (cause) {
       setError(errorMessage(cause));
     } finally {
@@ -299,6 +312,7 @@ export function Onboarding({
               ) : (
                 <>
                   <span><Icon name="lock" /> {messages!.platformAudio.windowsInstallerFact}</span>
+                  <span><Icon name="external" /> {messages!.platformAudio.windowsDownloadStep}</span>
                   {platformAudioSetup.requiresRouteAssignment ? (
                     <>
                       <span><Icon name="app" /> {messages!.platformAudio.windowsOpenAppStep}</span>
@@ -406,8 +420,22 @@ export function Onboarding({
                         {messages!.platformAudio.setUpLater}
                       </button>
                     ) : null}
+                    {isWindows && platformAudioSetup.code === "windows_vb_cable_required" ? (
+                      <button
+                        className="button-primary"
+                        disabled={busy !== null}
+                        onClick={() => void openWindowsAudioSetupDownload()}
+                        type="button"
+                      >
+                        {busy === "audio-download"
+                          ? messages!.platformAudio.openingVbCable
+                          : messages!.platformAudio.downloadVbCable}
+                      </button>
+                    ) : null}
                     <button
-                      className="button-primary"
+                      className={isWindows && platformAudioSetup.code === "windows_vb_cable_required"
+                        ? "button-secondary"
+                        : "button-primary"}
                       disabled={busy !== null || platformAudioSetup.status === "installing"}
                       onClick={() => void runPlatformAudioAction(
                         isLinux && platformAudioSetup.canInstall

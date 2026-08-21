@@ -167,17 +167,17 @@ class PlatformAudioSetupController {
       return this.transition({
         status: "ready",
         code: "ready",
-        detail: "Persona Voice Sink is isolated and standby passthrough is active",
+        detail: "VB-CABLE Input is isolated and standby passthrough is active",
       });
     }
     const helper = await integration.rawProcessRoute.helperReadiness();
     if (!helper.ready) {
-      const driverMissing = helper.code === "windows_signed_driver_missing";
+      const cableMissing = helper.code === "windows_vb_cable_required";
       return this.transition({
-        status: driverMissing ? "unavailable" : "error",
+        status: cableMissing ? "action-required" : "error",
         code: helper.code || "windows_audio_setup_failed",
-        detail: driverMissing
-          ? "The Microsoft-signed Persona Voice Sink is missing; reinstall the Windows application"
+        detail: cableMissing
+          ? "Install VB-CABLE from the official VB-Audio site, restart Windows, then check again"
           : helper.detail,
       });
     }
@@ -193,7 +193,7 @@ class PlatformAudioSetupController {
     return this.transition({
       status: "action-required",
       code: "windows_route_assignment_required",
-      detail: "Assign ChatGPT or Codex output to Persona Voice Sink in Windows Volume Mixer",
+      detail: "Assign ChatGPT or Codex output to CABLE Input in Windows Volume Mixer",
       canActivate: true,
       requiresRouteAssignment: true,
     });

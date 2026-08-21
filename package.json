@@ -1,6 +1,6 @@
 {
   "name": "codex-persona-voice",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Local-first realtime voice relay for Codex and ChatGPT",
   "author": "miuuyy",
@@ -163,14 +163,6 @@
         {
           "from": "native/bin/win32/cpv-audio-route.exe",
           "to": "native/win32/cpv-audio-route.exe"
-        },
-        {
-          "from": "native/bin/win32/cpv-driver-manager.exe",
-          "to": "native/win32/cpv-driver-manager.exe"
-        },
-        {
-          "from": "native/bin/win32/driver",
-          "to": "native/win32/driver"
         }
       ]
     },
@@ -199,9 +191,8 @@
     },
     "nsis": {
       "oneClick": true,
-      "perMachine": true,
-      "allowElevation": true,
-      "include": "installer/windows/installer.nsh",
+      "perMachine": false,
+      "allowElevation": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "runAfterFinish": false

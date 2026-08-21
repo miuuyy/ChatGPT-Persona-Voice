@@ -18,7 +18,7 @@ test("platform audio setup blocks suppression readiness before a native route is
     getPlatformAudioSetup: () => ({
       status: "action-required",
       code: "windows_route_assignment_required",
-      detail: "Assign ChatGPT to Persona Voice Sink",
+      detail: "Assign ChatGPT to CABLE Input",
     }),
   });
 
@@ -26,7 +26,7 @@ test("platform audio setup blocks suppression readiness before a native route is
     label: "Original suppression",
     ready: false,
     code: "windows_route_assignment_required",
-    detail: "Assign ChatGPT to Persona Voice Sink",
+    detail: "Assign ChatGPT to CABLE Input",
   });
   assert.equal(routeProbeCalls, 0);
 });

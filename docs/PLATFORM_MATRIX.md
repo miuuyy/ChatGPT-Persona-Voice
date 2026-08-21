@@ -11,13 +11,13 @@ production release.
 | Electron application | Implemented | Implemented | Implemented |
 | Source discovery | ChatGPT/Codex process trees | ChatGPT/Codex process trees | PipeWire output streams plus `/proc` process scope |
 | Existing-app capture | Core Audio process tap | Process-scoped WASAPI loopback | Native PipeWire capture from owned ingress monitor |
-| Original-route control | `CATapMutedWhenTapped` after first-frame proof | Elevated installer owns signed `Persona Voice Sink`; in-app setup verifies explicit per-app assignment, but does not mutate policy | In-app per-user PipeWire/WirePlumber policy setup, owned ingress/bypass, capture and bypass-mute proof |
+| Original-route control | `CATapMutedWhenTapped` after first-frame proof | Separately installed VB-CABLE Input; in-app setup verifies explicit per-app assignment, but does not mutate policy | In-app per-user PipeWire/WirePlumber policy setup, owned ingress/bypass, capture and bypass-mute proof |
 | Idle playback | Original route remains attached while the tap is armed | Bounded standby passthrough from the assigned sink to physical output | Owned bypass stream forwards ingress to the current physical default |
 | Converted output | Native Core Audio helper | Native WASAPI shared-render helper | Native PipeWire output helper |
 | Engine profile | `darwin-arm64-mps` | `windows-x64-cuda130` | `linux-x64-cuda130` |
 | Engine installation | Source and packaged in-app installer implemented | Source and packaged in-app installer implemented | Source and packaged in-app installer implemented |
-| Live relay evidence | Manually accepted live | Source/contracts only; no clean physical-Windows E2E acceptance | Ubuntu 24.04 / WirePlumber 0.4 and Fedora 42 / PipeWire 1.4.11 / WirePlumber 0.5.14 accepted live |
-| Remaining platform qualification | Signing/notarization, clean-machine and recovery matrix | Microsoft driver signature, clean install, Volume Mixer assignment/restore recovery matrix | Clean packaged policy recovery and broader distribution/session coverage |
+| Live relay evidence | Manually accepted live | User-mode build/contract proof; awaiting v0.1.1 physical-host reports | Ubuntu 24.04 / WirePlumber 0.4 and Fedora 42 / PipeWire 1.4.11 / WirePlumber 0.5.14 accepted live |
+| Remaining platform qualification | Signing/notarization, clean-machine and recovery matrix | Clean VB-CABLE install, Volume Mixer assignment/restore, CUDA, and recovery matrix | Clean packaged policy recovery and broader distribution/session coverage |
 | Supported release | No | No | No |
 
 Other architectures have no qualified realtime engine profile. Intel macOS, Windows ARM64, Linux
@@ -66,15 +66,14 @@ The AppImage includes the policy assets and in-app lifecycle. It still needs cle
 install/remove/reload rollback, daemon/device/crash recovery qualification, and broader
 distribution/session coverage.
 
-## Windows evidence and external blocker
+## Windows evidence and prerequisite
 
-The Windows x64 path includes implemented user-mode and driver source:
+The Windows x64 preview path includes:
 
 - process-scoped WASAPI loopback capture for one selected process tree on build 20348 or newer;
 - bounded WASAPI shared-render output to the physical listening device;
-- an owned, render-only `Persona Voice Sink` driver derived from Microsoft's audio sample, plus a
-  fixed-resource SetupAPI driver manager invoked only by the elevated NSIS install/uninstall path;
-- a route verifier that proves the selected app's current live audio sessions are on the owned sink,
+- strict recognition of the base VB-CABLE Input endpoint installed separately from VB-Audio;
+- a route verifier that proves the selected app's current live audio sessions are on that endpoint,
   monitors session changes, and declares that it does not mutate routing policy;
 - an in-app system-audio step that guides assignment and starts a standby lifecycle which forwards
   captured sink audio to the physical output while conversion is idle, then hands the same route to
@@ -82,18 +81,15 @@ The Windows x64 path includes implemented user-mode and driver source:
 - the locked `windows-x64-cuda130` Seed-VC profile and cross-platform engine installer.
 
 WASAPI process loopback does not suppress the normal endpoint by itself. The suppressing boundary is
-the owned virtual sink, and a normal clean machine will not load it until Microsoft has signed its
-catalog/driver for kernel policy. The repository can build only the unsigned Hardware Dev Center
-submission payload. Packaging intentionally requires
-`CODEX_PERSONA_VOICE_SIGNED_DRIVER_DIR` and uses Windows `/kp` verification to require a signed
-catalog binding both the INF and SYS; it does not enable test-signing or ship unsigned output.
+VB-CABLE, which is signed and distributed by VB-Audio. Persona Voice opens the official download
+page but never bundles, downloads, installs, updates, or removes that driver.
 
 The current in-app route helper also has an explicit product limitation: it verifies current live sessions
 but does not assign or restore per-app audio policy, and Windows notifications are not guaranteed to
 arrive before the first audio frame. A run may therefore require the user to assign ChatGPT/Codex to
-`Persona Voice Sink` in **Settings → System → Sound → Volume mixer**, keep standby passthrough active,
+`CABLE Input` in **Settings → System → Sound → Volume mixer**, keep standby passthrough active,
 and restore the app to **Default** or the physical device before quit/uninstall. Clean-binary and
-recovery acceptance remain blocked until the signed driver and that lifecycle are qualified.
+recovery acceptance remain preview-quality until that lifecycle is qualified on more physical hosts.
 
 Graceful Quit blocks on explicit restoration and user confirmation. A crash/force-kill can still
 leave the OS-owned per-app preference pointing at the sink. The route monitor proves current live
@@ -122,11 +118,10 @@ compilation, and non-permissioned native self-tests on macOS, Windows, and Linux
 inside a private PipeWire session. These checks prove build/protocol contracts, not permissioned
 live routing, CUDA performance, clean installation, or release support.
 
-The `v0.1.0` tag workflow builds target-native DMG/ZIP and AppImage artifacts and signs a canonical
-update manifest. Windows remains source-only: its native components still compile and run contract
-self-tests in CI, while Windows packaging stops unless an externally Microsoft-signed driver package
-is supplied and verified. Transport, checksums, or a published artifact do not replace the platform
-gates above.
+The `v0.1.1` tag workflow builds target-native DMG/ZIP, NSIS, and AppImage artifacts and signs a
+canonical update manifest. Windows native components compile and run contract self-tests in CI;
+VB-CABLE itself is not a release asset. Transport, checksums, or a published artifact do not replace
+the platform gates above.
 
 See [Release engineering](RELEASE.md) for artifact policy and [Roadmap](ROADMAP.md) for the remaining
 evidence sequence.

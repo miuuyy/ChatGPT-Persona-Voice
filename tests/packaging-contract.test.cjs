@@ -90,16 +90,6 @@ test("one notice inventory covers every bundled voice and packaged bootstrap", (
   assert.equal(reactLicense, fs.readFileSync(path.join(root, "node_modules", "react", "LICENSE"), "utf8"));
   assert.equal(reactLicense, fs.readFileSync(path.join(root, "node_modules", "react-dom", "LICENSE"), "utf8"));
   assert.equal(reactLicense, fs.readFileSync(path.join(root, "node_modules", "scheduler", "LICENSE"), "utf8"));
-  const msPlLicense = fs.readFileSync(
-    path.join(root, "third_party_licenses", "MS-PL-LICENSE"),
-    "utf8",
-  );
-  assert.match(msPlLicense, /Microsoft Public License \(MS-PL\)/);
-  assert.equal(
-    msPlLicense,
-    fs.readFileSync(path.join(root, "native", "windows", "driver", "MS-PL-LICENSE"), "utf8"),
-  );
-
   for (const retiredNotice of [
     "voices/licenses/VOICEVOX.md",
     "voices/licenses/JARVIS.md",
@@ -122,8 +112,6 @@ test("development and native packaging rebuild helpers instead of relying on sta
     "native/win32/cpv-audio-capture.exe",
     "native/win32/cpv-audio-output.exe",
     "native/win32/cpv-audio-route.exe",
-    "native/win32/cpv-driver-manager.exe",
-    "native/win32/driver",
   ]);
   assert.deepEqual(packageJson.build.linux.extraResources.map((entry) => entry.to).sort(), [
     "native/linux/THIRD_PARTY_NOTICES.md",
@@ -145,9 +133,8 @@ test("experimental packages are local-only and receive a SHA-256 manifest", () =
   assert.match(packaging, /process\.versions\.bun/);
   assert.match(packaging, /updater-runtime/);
   assert.match(packaging, /engine-installer/);
-  assert.match(packaging, /CODEX_PERSONA_VOICE_SIGNED_DRIVER_DIR/);
-  assert.match(packaging, /verifyMicrosoftSignedPackage\(source\)/);
-  assert.match(packaging, /assertWindowsReleasePayload\(path\.dirname\(destination\)\)/);
+  assert.doesNotMatch(packaging, /CODEX_PERSONA_VOICE_SIGNED_DRIVER_DIR/);
+  assert.doesNotMatch(packaging, /verifyMicrosoftSignedPackage|assertWindowsReleasePayload/);
   assert.equal(
     (packaging.match(/path\.join\(root, "THIRD_PARTY_NOTICES\.md"\)/g) || []).length,
     2,
@@ -157,14 +144,13 @@ test("experimental packages are local-only and receive a SHA-256 manifest", () =
   assert.doesNotMatch(packaging, /runtime\.json/);
 });
 
-test("tag releases publish qualified macOS and Linux assets with one canonical checksum manifest", () => {
+test("tag releases publish macOS, Windows, and Linux assets with one canonical checksum manifest", () => {
   const ciWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "ci.yml"), "utf8");
   const workflow = fs.readFileSync(path.join(root, ".github", "workflows", "release.yml"), "utf8");
-  for (const runner of ["macos-15", "ubuntu-latest"]) {
+  for (const runner of ["macos-15", "windows-latest", "ubuntu-latest"]) {
     assert.match(workflow, new RegExp(runner));
   }
-  assert.doesNotMatch(workflow, /windows-latest/);
-  assert.doesNotMatch(workflow, /artifacts\/\*\.exe/);
+  assert.match(workflow, /artifacts\/\*\.exe/);
   assert.match(workflow, /tags: \["v\*"\]/);
   assert.match(ciWorkflow, /bun-version: 1\.3\.14/);
   assert.match(workflow, /bun-version: 1\.3\.14/);
@@ -177,7 +163,7 @@ test("tag releases publish qualified macOS and Linux assets with one canonical c
   assert.match(workflow, /BUN-1\.3\.14-LICENSE\.md/);
   assert.match(workflow, /UV-0\.11\.14-LICENSE-MIT/);
   assert.match(workflow, /REACT-19-LICENSE/);
-  assert.match(workflow, /MS-PL-LICENSE/);
+  assert.doesNotMatch(workflow, /MS-PL-LICENSE/);
   assert.doesNotMatch(workflow, /voices\/licenses/);
   assert.match(workflow, /SHA256SUMS/);
   assert.match(workflow, /SHA256SUMS\.sig/);

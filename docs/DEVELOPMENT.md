@@ -1,15 +1,13 @@
 # Development
 
-This guide covers two live-accepted target-native paths and the implemented Windows source/contracts:
+This guide covers the three target-native paths:
 
 - Apple Silicon macOS 14.2+ with Apple MPS;
-- Windows x64 build 20348+ source/contracts with NVIDIA CUDA and an externally Microsoft-signed
-  Persona Voice Sink required for physical-host acceptance;
+- Windows x64 build 20348+ with NVIDIA CUDA and VB-CABLE installed separately from VB-Audio;
 - Linux x64 with NVIDIA CUDA, PipeWire, and WirePlumber 0.4 or 0.5.
 
 macOS, Ubuntu 24.04/WirePlumber 0.4, and Fedora 42/PipeWire 1.4.11/WirePlumber 0.5.14 have live
-relay acceptance evidence. Windows source and native components exist, but a clean functional
-binary remains blocked on Microsoft driver signing.
+relay acceptance evidence. The packaged Windows path still needs broader clean-host feedback.
 
 ## Prerequisites
 
@@ -27,11 +25,10 @@ binary remains blocked on Microsoft driver signing.
 | --- | --- |
 | macOS arm64 | macOS 14.2+, Xcode Command Line Tools, Apple MPS |
 | Linux x64 | C++20 compiler, `pkg-config`, PipeWire development headers/runtime, WirePlumber, supported NVIDIA GPU/driver |
-| Windows x64 | Windows build 20348+, Visual Studio/MSVC, CMake, Windows SDK, supported NVIDIA GPU/driver |
+| Windows x64 | Windows build 20348+, Visual Studio/MSVC, CMake, Windows SDK, supported NVIDIA GPU/driver, VB-CABLE |
 
-Building the Windows driver submission also requires the Windows Driver Kit and Visual Studio driver
-toolchain. Building that source does not make it loadable on a normal machine: Microsoft must sign
-the catalog/driver for kernel policy.
+Install VB-CABLE from its [official page](https://vb-audio.com/Cable/), run its setup as
+administrator, and restart Windows. Persona Voice does not bundle or redistribute it.
 
 The engine installer estimates approximately 2.5 GiB installed and 6 GiB minimum free on macOS,
 9 GiB installed and 15 GiB free on Windows, and 11 GiB installed and 15 GiB free on Linux. Keep
@@ -105,26 +102,12 @@ The user-mode helper build produces:
 cpv-audio-capture.exe
 cpv-audio-output.exe
 cpv-audio-route.exe
-cpv-driver-manager.exe
 ```
 
-The driver build command:
-
-```powershell
-node scripts/windows-build-driver.cjs
-```
-
-creates an unsigned Hardware Dev Center submission payload. It deliberately does not enable test
-signing and must not be described or distributed as an installable product driver. A functional
-clean-machine path requires the returned `PersonaVoiceSink.inf`, `cpv-audio-sink.cat`, and
-`cpv-audio-sink.sys` to be Microsoft-signed.
-
-The elevated NSIS app installer invokes the fixed-resource driver manager; its uninstall flow first
-requires explicit Volume Mixer restoration and then removes the driver. The in-app system-audio
-screen observes but does not mutate per-app audio policy. A qualified run may require assigning
-ChatGPT/Codex to **Persona Voice Sink** under **Settings → System → Sound → Volume mixer**, verifying
-and keeping Persona Voice standby active, and restoring the app to **Default** or the physical
-device before quit/uninstall.
+The in-app system-audio screen detects the official VB-CABLE render endpoint but does not mutate
+per-app audio policy. Assign ChatGPT/Codex to **CABLE Input** under **Settings → System → Sound →
+Volume mixer**, verify the live route, and keep Persona Voice standby active. Restore the app to
+**Default** or the physical device before removing VB-CABLE.
 
 ## Engine setup
 
@@ -217,7 +200,7 @@ bun run smoke:output:jitter:mac
 
 These affect local TCC/audio state. Run them interactively and include host/OS/hardware details with
 results. Linux live acceptance requires a real user PipeWire/WirePlumber session and the installed
-policy; Windows live acceptance requires a Microsoft-signed sink and explicit route-restoration
+policy; Windows live acceptance requires VB-CABLE and explicit route-restoration
 evidence. The generic native self-tests do not replace those runs.
 
 ## Repository map
@@ -229,7 +212,7 @@ evidence. The generic native self-tests do not replace those runs.
 | `electron/` | Main process, platform adapters, IPC, persistence, and protocol parsers |
 | `native/macos/` | Objective-C++ Core Audio capture/output helpers |
 | `native/linux/` | PipeWire capture/output plus WirePlumber 0.4/0.5 policy assets |
-| `native/windows/` | WASAPI helpers, route verifier, driver manager, and owned sink source |
+| `native/windows/` | WASAPI process-loopback, route verifier, and bounded output helpers |
 | `native/shared/` | CPV1 native protocol layout |
 | `engine/seed-vc/` | CPVE worker, platform locks, model verification, installer inputs |
 | `engine/vendor/seed-vc/` | Pinned GPL-3.0 Seed-VC source submodule |
@@ -269,12 +252,12 @@ Cross-packaging is rejected. The artifacts remain experimental:
 - macOS lacks final Developer ID signing/notarization and clean-machine qualification;
 - Linux AppImage packaging includes the per-user policy assets and in-app install/remove/reload
   lifecycle, but clean-machine recovery and broader distribution coverage remain to qualify;
-- Windows packaging requires `CODEX_PERSONA_VOICE_SIGNED_DRIVER_DIR` to point to a Microsoft
-  kernel-policy-signed driver package. The packager verifies it and refuses unsigned output.
+- Windows packaging includes only the three user-mode helpers. VB-CABLE remains a separate
+  user-installed prerequisite and is never copied into the package.
 
-The `v0.1.0` tag workflow builds the qualified macOS and Linux preview packages, regenerates one
-canonical `SHA256SUMS`, signs that manifest, and creates a draft GitHub Release. Windows remains a
-source build until its driver is Microsoft-signed. Artifact transport is not support evidence.
+The `v0.1.1` tag workflow builds macOS, Windows, and Linux preview packages, regenerates one
+canonical `SHA256SUMS`, signs that manifest, and creates a draft GitHub Release. Artifact transport
+is not support evidence.
 
 ## Pull requests
 

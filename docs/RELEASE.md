@@ -1,21 +1,19 @@
 # Release engineering
 
-Status: `v0.1.0` is the first public preview release for macOS and Linux. Windows is source-only
-until the owned virtual-sink driver receives a Microsoft kernel-policy signature.
+Status: `v0.1.1` is the preview release for macOS, Windows, and Linux. Windows uses VB-CABLE as a
+separately installed prerequisite and still needs broader physical-host acceptance.
 
 The repository contains complete live-accepted source paths for Apple Silicon macOS and NVIDIA
-Linux x64. Windows x64 has implemented source/contracts for capture, output, owned-sink routing,
-standby lifecycle, and CUDA engine setup, but no clean physical-Windows E2E evidence. It cannot
-produce a clean functional binary without a Microsoft-signed virtual-sink driver. Implementation
-and live development evidence do not complete distribution qualification.
+Linux x64. Windows x64 packages process-loopback capture, output, VB-CABLE route verification,
+standby lifecycle, and CUDA engine setup, but has limited clean physical-Windows E2E evidence.
+Implementation and development evidence do not complete distribution qualification.
 
 ## Current artifact policy
 
 - `bun run package:mac`, `package:win`, and `package:linux` are target-host packaging commands, not
   support declarations. Cross-target packaging is rejected.
-- Normal CI does not publish. A `v*` tag matching `package.json` starts the separate macOS ARM64 and
-  Linux x64 packaging workflow. Windows continues to compile and run native contract tests in CI,
-  but the tag workflow does not publish a Windows installer.
+- Normal CI does not publish. A `v*` tag matching `package.json` starts target-native macOS ARM64,
+  Windows x64, and Linux x64 packaging jobs.
 - Local packaging writes `SHA256SUMS`. Tag publication regenerates one canonical manifest covering
   all uploaded artifacts/notices and signs its exact bytes with the protected Ed25519 update key.
 - All target packages carry the small pinned `uv` bootstrap and platform engine lock; the large
@@ -24,12 +22,8 @@ and live development evidence do not complete distribution qualification.
 - Linux AppImage packaging includes native PipeWire helpers, policy assets, and in-app
   install/remove/reload actions, but clean recovery and broader distribution/session qualification
   remain.
-- Windows packaging requires `CODEX_PERSONA_VOICE_SIGNED_DRIVER_DIR`. It verifies a Microsoft
-  kernel-policy-signed `PersonaVoiceSink.inf`, `cpv-audio-sink.cat`, and `cpv-audio-sink.sys` before
-  packaging. The elevated NSIS installer then owns driver install/removal. Unsigned output is
-  rejected and never substituted.
-- Because that externally signed driver is not currently available, Windows is distributed as
-  reviewed source rather than a nonfunctional installer.
+- Windows packages only the user-mode WASAPI helpers. The app links to the official VB-CABLE page;
+  VB-CABLE is installed, updated, and removed separately by the user.
 - Any generated DMG, ZIP, EXE, or AppImage remains experimental until its platform gates below pass.
 
 ## GitHub Releases update channel
@@ -49,7 +43,7 @@ native `renameatx_np(RENAME_SWAP)` helper for atomic exchange. The package carri
 only for the detached updater, with its version-specific notice.
 
 The signed manifest authenticates project release assets; it does not replace platform trust.
-Developer ID/notarization, Windows Authenticode/kernel policy, and Linux distribution/package trust
+Developer ID/notarization, Windows Authenticode/SmartScreen, and Linux distribution/package trust
 remain separate gates. The private Ed25519 key is absent from the repository and publication stops
 unless the protected `release-signing` environment supplies `UPDATE_SIGNING_PRIVATE_KEY`.
 
@@ -129,35 +123,28 @@ uninstall cleanup. Remaining gates include:
 `pw-dump` or a passing private-PipeWire self-test is useful evidence, but neither replaces the live
 desktop route and recovery matrix.
 
-## Windows release gates and signing boundary
+## Windows release gates
 
-The repository implements source/contracts for process-scoped WASAPI capture, bounded WASAPI physical output, an owned
-render-only Persona Voice Sink source, a fixed-resource SetupAPI manager, current-session route
-verification, bounded standby passthrough, and the x64 CUDA engine/install profile.
+The repository implements process-scoped WASAPI capture, bounded physical output, strict recognition
+of the official VB-CABLE Input endpoint, current-session route verification, bounded standby
+passthrough, and the x64 CUDA engine/install profile. VB-CABLE is not a release asset.
 
-The remaining first gate is external and non-negotiable: Microsoft must sign the driver package for
-kernel policy. The checked-in build creates an unsigned Hardware Dev Center submission payload only.
-The project does not use test-signing, disable signature enforcement, or package that unsigned
-payload. Release verification must pass Windows `/kp` policy and prove that the signed catalog binds
-both the exact INF and SYS.
+Windows still needs:
 
-After a signed package exists, Windows still needs:
-
-- clean elevated install/self-test/remove, reboot behavior, rollback, update, and recovery evidence;
+- clean VB-CABLE install/reboot/assignment/restore and recovery evidence;
 - Authenticode signing and installer reputation/SmartScreen testing;
 - exact Windows/NVIDIA version qualification;
 - qualification and recovery coverage for the current in-app route UX: the verifier does not mutate
   persistent per-app routing, current live-session notifications are not guaranteed pre-audio, and
-  users may need to assign ChatGPT/Codex to Persona Voice Sink in Volume Mixer then restore it before
-  the elevated uninstaller removes the driver;
+  users assign ChatGPT/Codex to CABLE Input in Volume Mixer and restore it before removing VB-CABLE;
 - proof that standby remains audible and bounded, conversion never leaks the original source, and
   route loss/manual restoration cannot be mistaken for success;
 - clean physical-Windows UAC/install/rollback/audio and NVIDIA execution evidence; source, CI, and
   engine-profile contracts alone are not GPU/performance proof;
 - the common clean-machine, performance, security, and licensing gates.
 
-WASAPI loopback alone is not original-route suppression. The owned signed sink plus proven app
-assignment is the boundary.
+WASAPI loopback alone is not original-route suppression. VB-CABLE plus proven app assignment is the
+boundary.
 
 ## Licensing checklist
 
@@ -169,8 +156,6 @@ Final artifacts must deliver and audit:
 - credits, terms, and hashes for twelve bundled VOICEVOX references;
 - community JARVIS attribution and hash;
 - the disclosed Donald Trump AI-likeness reference attribution and hash;
-- the MS-PL notice and complete retained license for the modified Microsoft Windows audio sample,
-  shipped from `third_party_licenses/MS-PL-LICENSE` in the packaged notice payload;
 - notices matching the exact final native/runtime contents.
 
 ## Release procedure once gates pass
@@ -191,7 +176,7 @@ Final artifacts must deliver and audit:
 
 ## Versioning
 
-The package currently reports `0.1.0`; publication requires the exact matching `v0.1.0` tag (or the
+The package currently reports `0.1.1`; publication requires the exact matching `v0.1.1` tag (or the
 matching future version). Until a public compatibility contract exists, CPV1, CPVE, settings, route
 policy, and adapter changes may be breaking and must be called out in release notes.
 

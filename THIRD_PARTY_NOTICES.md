@@ -53,22 +53,6 @@ Upstreams:
 - <https://github.com/facebook/react/tree/v19.2.8/packages/react-dom>
 - <https://github.com/facebook/react/tree/v19.2.8/packages/scheduler>
 
-## Microsoft Windows audio driver sample
-
-The Windows `Persona Voice Sink` driver source under
-`native/windows/driver/upstream-simpleaudiosample/**` is a modified derivative of Microsoft's
-`Windows-driver-samples/audio/simpleaudiosample` at commit
-`717778a20ba4dd2440fe609f69153a1f8a64f597`.
-
-Upstream: <https://github.com/microsoft/Windows-driver-samples/tree/717778a20ba4dd2440fe609f69153a1f8a64f597/audio/simpleaudiosample>
-
-The upstream code is licensed under the Microsoft Public License (MS-PL). The complete license
-text is retained with the source at `native/windows/driver/MS-PL-LICENSE` and in the packaged notice
-payload at `third_party_licenses/MS-PL-LICENSE`. Persona Voice modifies the sample into a branded
-render-only null sink, removes capture endpoints, adds a fixed ownership marker, and changes the
-device identifiers and package metadata. Microsoft names and trademarks are not used for product
-branding.
-
 ## Seed-VC inference sidecar and model artifacts
 
 The separate Python inference process under `engine/seed-vc` uses the Seed-VC source pinned at

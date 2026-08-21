@@ -7,7 +7,6 @@ const {
   createWindowsIntegration,
 } = require("../electron/windows-integration.cjs");
 const { WindowsAudioOutput } = require("../electron/windows-audio-output.cjs");
-const { WindowsDriverManager } = require("../electron/windows-driver-manager.cjs");
 const { WindowsRouteLifecycle } = require("../electron/windows-route-lifecycle.cjs");
 
 test("Windows main-process factory installs the lifecycle wrapper as the runtime process route", () => {
@@ -15,26 +14,20 @@ test("Windows main-process factory installs the lifecycle wrapper as the runtime
     captureHelperPath: "C:\\resources\\native\\win32\\cpv-audio-capture.exe",
     outputHelperPath: "C:\\resources\\native\\win32\\cpv-audio-output.exe",
     routeHelperPath: "C:\\resources\\native\\win32\\cpv-audio-route.exe",
-    driverManagerHelperPath: "C:\\resources\\native\\win32\\cpv-driver-manager.exe",
     processRouteOptions: { platform: "win32" },
     outputOptions: { platform: "win32" },
-    driverManagerOptions: { platform: "win32" },
   });
   assert.ok(integration.processRoute instanceof WindowsRouteLifecycle);
   assert.equal(integration.processRoute, integration.routeLifecycle);
   assert.ok(integration.audioOutput instanceof WindowsAudioOutput);
-  assert.ok(integration.driverManager instanceof WindowsDriverManager);
+  assert.equal(integration.driverManager, undefined);
 });
 
-test("Windows packaging contract includes only fixed native and signed-driver destinations", () => {
+test("Windows packaging contract includes only the three user-mode audio helpers", () => {
   assert.deepEqual(WINDOWS_PACKAGED_NATIVE_FILES, [
     "native/win32/cpv-audio-capture.exe",
     "native/win32/cpv-audio-output.exe",
     "native/win32/cpv-audio-route.exe",
-    "native/win32/cpv-driver-manager.exe",
-    "native/win32/driver/PersonaVoiceSink.inf",
-    "native/win32/driver/cpv-audio-sink.cat",
-    "native/win32/driver/cpv-audio-sink.sys",
   ]);
   assert.equal(WINDOWS_PACKAGED_NATIVE_FILES.some((file) => file.includes("/build/")), false);
 });

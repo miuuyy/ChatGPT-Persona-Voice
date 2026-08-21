@@ -11,15 +11,9 @@ const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const capture = read("native/windows/ProcessLoopbackCapture.cpp");
 const output = read("native/windows/WasapiOutput.cpp");
 const route = read("native/windows/AudioPolicyRoute.cpp");
-const manager = read("native/windows/DriverManager.cpp");
-const managerManifest = read("native/windows/DriverManager.manifest");
+const common = read("native/windows/WindowsAudioCommon.hpp");
 const cmake = read("native/windows/CMakeLists.txt");
-const inf = read("native/windows/driver/upstream-simpleaudiosample/Source/Main/PersonaVoiceSink.inx");
-const miniports = read("native/windows/driver/upstream-simpleaudiosample/Source/Filters/minipairs.h");
-const driverBuild = read("scripts/windows-build-driver.cjs");
-const releaseGate = read("scripts/windows-release-gate.cjs");
 const nativeBuild = read("scripts/windows-build-native.cjs");
-const installer = read("installer/windows/installer.nsh");
 const packageJson = JSON.parse(read("package.json"));
 
 test("Windows capture uses the documented endpoint-independent process-loopback API", () => {
@@ -32,7 +26,7 @@ test("Windows capture uses the documented endpoint-independent process-loopback 
   assert.match(capture, /owned-virtual-endpoint-required/);
 });
 
-test("Windows route maintains official session notifications without private policy mutation", () => {
+test("Windows route verifies the official VB-CABLE endpoint and uses no private policy mutation", () => {
   assert.match(route, /RegisterSessionNotification\(/);
   assert.match(route, /RegisterAudioSessionNotification\(/);
   assert.match(route, /RegisterEndpointNotificationCallback\(/);
@@ -40,12 +34,19 @@ test("Windows route maintains official session notifications without private pol
   assert.match(route, /notificationGuaranteesPreAudio/);
   assert.match(route, /restoreRequired.*true/);
   assert.match(route, /standbyPassthroughRequired.*true/);
-  assert.match(route, /cpv-persona-voice-sink-v1/);
+  assert.match(route, /vb-audio-vb-cable-input-v1/);
+  assert.match(route, /virtualCableInstalled/);
+  assert.match(route, /virtualCableCount/);
+  assert.match(route, /isVbCableInput/);
+  assert.match(common, /PKEY_Device_DeviceDesc/);
+  assert.match(common, /PKEY_DeviceInterface_FriendlyName/);
+  assert.match(common, /kVbCableInputDeviceDescription\[\] = L"CABLE Input"/);
+  assert.match(common, /kVbCableInterfaceFriendlyName\[\] = L"VB-Audio Point"/);
   assert.doesNotMatch(route, /IAudioPolicyConfig|SetPersistedDefaultAudioEndpoint|RoGetActivationFactory/);
   assert.doesNotMatch(route, /ISimpleAudioVolume|SetMute\(/);
 });
 
-test("Windows output is bounded and rejects the suppression endpoint", () => {
+test("Windows output is bounded and rejects VB-CABLE as a physical destination", () => {
   assert.match(output, /kConvertedStartupPrebufferMs = 500/);
   assert.match(output, /kConvertedQueueCapacityMs = 1'500/);
   assert.match(output, /kPassthroughStartupPrebufferMs = 40/);
@@ -53,61 +54,20 @@ test("Windows output is bounded and rejects the suppression endpoint", () => {
   assert.match(output, /mode == OutputMode::Passthrough/);
   assert.match(output, /AUDCLNT_BUFFERFLAGS_SILENT/);
   assert.match(output, /output_device_is_suppression_sink/);
-  assert.match(output, /isPersonaVoiceSink/);
+  assert.match(output, /isVbCableInput/);
+  assert.match(output, /suppressionSink/);
 });
 
-test("Persona Voice driver source exposes one branded render-only sink", () => {
-  assert.match(inf, /ROOT\\CPVAudioSink/);
-  assert.match(inf, /cpv-audio-sink\.sys/);
-  assert.match(inf, /cpv-audio-sink\.cat/);
-  assert.match(inf, /PKEY_PersonaVoiceSink_Identity/);
-  assert.match(inf, /Persona Voice Sink/);
-  assert.doesNotMatch(inf, /KSCATEGORY_CAPTURE/);
-  assert.match(miniports, /#define g_cCaptureEndpoints 0/);
-});
-
-test("Windows clean-install manager verifies trust and owns device plus INF rollback", () => {
-  assert.match(manager, /WinVerifyTrust\(/);
-  assert.match(manager, /CryptCATAdminCalcHashFromFileHandle2\(/);
-  assert.match(manager, /CryptCATGetMemberInfo\(/);
-  assert.match(manager, /SetupCopyOEMInfW\(/);
-  assert.match(manager, /UpdateDriverForPlugAndPlayDevicesW\(/);
-  assert.match(manager, /SetupDiCallClassInstaller\(DIF_REMOVE/);
-  assert.match(manager, /SetupUninstallOEMInfW\(/);
-  assert.match(manager, /driver_install_rollback_failed/);
-  assert.match(manager, /owned\.size\(\) != 1/);
-  assert.match(manager, /--ensure-installed/);
-  assert.match(manager, /--installer-mode/);
-  assert.match(manager, /emitReady\("ensure-installed"/);
-  assert.match(manager, /executableRoot \/ kDriverDirectory/);
-  assert.match(manager, /FindResourceW\(/);
-  assert.match(manager, /requireAdministrator/);
-  assert.doesNotMatch(manager, /--package-dir/);
-  assert.match(managerManifest, /level="requireAdministrator"/);
-  assert.match(cmake, /\/MANIFESTINPUT:/);
-  assert.equal(packageJson.build.nsis.perMachine, true);
-  assert.equal(packageJson.build.nsis.allowElevation, true);
-  assert.equal(packageJson.build.nsis.include, "installer/windows/installer.nsh");
-  assert.match(installer, /--ensure-installed/);
-  assert.match(installer, /--uninstall/);
-  assert.equal((installer.match(/--installer-mode/g) || []).length, 2);
-  assert.match(installer, /Abort/);
-});
-
-test("Windows build emits exact runtime names and keeps unsigned driver output out of releases", () => {
+test("Windows build and installer require no bundled kernel driver or elevation", () => {
   for (const name of [
-    "cpv-audio-capture.exe", "cpv-audio-output.exe", "cpv-audio-route.exe", "cpv-driver-manager.exe",
+    "cpv-audio-capture.exe", "cpv-audio-output.exe", "cpv-audio-route.exe",
   ]) assert.match(nativeBuild, new RegExp(name.replaceAll(".", "\\.")));
-  assert.match(driverBuild, /SignMode=Off/);
-  assert.match(driverBuild, /\/t:Clean;Build/);
-  assert.match(driverBuild, /conflicting.*outputs/);
-  assert.doesNotMatch(driverBuild, /latestFile/);
-  assert.match(driverBuild, /--verify-signed-package/);
-  assert.match(driverBuild, /"\/kp"/);
-  assert.doesNotMatch(driverBuild, /testsigning|bcdedit/i);
-  assert.match(releaseGate, /verifyMicrosoftSignedPackage/);
-  assert.match(releaseGate, /platform !== "win32"/);
-  assert.doesNotMatch(releaseGate, /buildUnsignedDriverSubmission/);
+  assert.doesNotMatch(nativeBuild, /cpv-driver-manager/);
+  assert.doesNotMatch(cmake, /cpv-driver-manager|DriverManager/);
+  assert.equal(packageJson.build.nsis.perMachine, false);
+  assert.equal(packageJson.build.nsis.allowElevation, false);
+  assert.equal(packageJson.build.nsis.include, undefined);
+  assert.equal(packageJson.build.win.extraResources.length, 3);
 });
 
 test("Windows user-mode native helpers compile with MSVC", {

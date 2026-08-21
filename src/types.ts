@@ -207,6 +207,7 @@ export interface VoiceBridge {
   completeOnboarding(): Promise<OnboardingState>;
   refreshReadiness(): Promise<RuntimeSnapshot>;
   refreshPlatformAudioSetup(): Promise<PlatformAudioSetupState>;
+  openWindowsAudioSetupDownload(): Promise<boolean>;
   installPlatformAudioSetup(): Promise<PlatformAudioSetupState>;
   activatePlatformAudioSetup(): Promise<PlatformAudioSetupState>;
   removePlatformAudioSetup(): Promise<PlatformAudioSetupState>;

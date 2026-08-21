@@ -203,7 +203,7 @@ function probePlatformCapabilities({
       code: routeBuilt ? "windows_sink_probe_required" :
         supported ? "windows_route_helper_missing" : "windows_build_20348_required",
       detail: routeBuilt
-        ? "The signed Persona Voice Sink and selected app route must pass their live proof"
+        ? "VB-CABLE Input and the selected app route must pass their live proof"
         : supported
           ? "The native Windows route verifier is not built"
           : "The Windows virtual-route profile requires build 20348 or newer",

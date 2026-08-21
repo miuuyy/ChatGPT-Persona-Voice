@@ -137,22 +137,30 @@ class WindowsProcessRoute {
             route.supportsEventDrivenMonitoring !== true ||
             route.notificationGuaranteesPreAudio !== false ||
             route.proofScope !== "current-live-sessions" ||
-            route.driverInstalled !== true ||
-            route.sinkName !== "Persona Voice Sink" ||
-            route.sinkIdentity !== "cpv-persona-voice-sink-v1" ||
+            !Number.isInteger(route.virtualCableCount) ||
+            route.virtualCableInstalled !== true ||
+            route.virtualCableCount !== 1 ||
+            route.sinkName !== "CABLE Input (VB-Audio Virtual Cable)" ||
+            route.sinkIdentity !== "vb-audio-vb-cable-input-v1" ||
             typeof route.endpointId !== "string" || !route.endpointId) {
-          const error = new Error(route.driverInstalled === false
-            ? "Install the signed Persona Voice Sink driver before using Windows voice relay"
+          const cableMissing = route.virtualCableInstalled === false && route.virtualCableCount === 0;
+          const cableAmbiguous = route.virtualCableInstalled === false && route.virtualCableCount > 1;
+          const error = new Error(cableMissing
+            ? "Install VB-CABLE from VB-Audio, restart Windows, then check the audio route again"
+            : cableAmbiguous
+              ? "Windows exposes multiple base VB-CABLE Input endpoints; remove the duplicate or stale VB-CABLE installation"
             : "Windows route self-test did not prove the virtual-endpoint contract");
-          error.code = route.driverInstalled === false
-            ? "windows_signed_driver_missing"
+          error.code = cableMissing
+            ? "windows_vb_cable_required"
+            : cableAmbiguous
+              ? "windows_vb_cable_ambiguous"
             : "windows_native_route_failed";
           throw error;
         }
         return {
           ready: true,
           code: "ready",
-          detail: "WASAPI process capture and Persona Voice Sink passed their native self-tests",
+          detail: "WASAPI process capture and VB-CABLE Input passed their native self-tests",
           sourceFormat: {
             sampleRate: capture.sampleRate,
             channels: capture.channels,
@@ -221,7 +229,7 @@ class WindowsProcessRoute {
       return {
         ready: true,
         code: "ready",
-        detail: "Selected Windows process tree is ready; route it to Persona Voice Sink in Volume Mixer",
+        detail: "Selected Windows process tree is ready; route it to CABLE Input in Volume Mixer",
       };
     } catch (error) {
       return {
@@ -358,7 +366,8 @@ class WindowsProcessRoute {
         if (message.type === "ready") {
           if (this.routeReady || message.helper !== "route" ||
               message.backend !== "windows-virtual-endpoint-verifier" ||
-              message.driverInstalled !== true || message.routeMutation !== false ||
+              message.virtualCableInstalled !== true || message.routeMutation !== false ||
+              message.virtualCableCount !== 1 ||
               message.manualAssignmentRequired !== true ||
               message.restoreRequired !== true ||
               message.restoreMechanism !== "manual-volume-mixer" ||
@@ -367,7 +376,7 @@ class WindowsProcessRoute {
               message.supportsEventDrivenMonitoring !== true ||
               message.notificationGuaranteesPreAudio !== false ||
               message.proofScope !== "current-live-sessions" ||
-              message.sinkIdentity !== "cpv-persona-voice-sink-v1" ||
+              message.sinkIdentity !== "vb-audio-vb-cable-input-v1" ||
               message.armed !== true || !["armed", "engaged"].includes(message.state) ||
               message.originalSuppressed !== (message.state === "engaged") ||
               message.endpointId !== suppressionEndpointId) {

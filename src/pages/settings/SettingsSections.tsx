@@ -28,7 +28,7 @@ import {
   VoiceChoice,
 } from "./SettingsPrimitives";
 
-type PlatformAudioAction = "refresh" | "install" | "activate" | "remove";
+type PlatformAudioAction = "refresh" | "install" | "activate" | "remove" | "download";
 
 export type SettingsSectionProps = {
   snapshot: LauncherSnapshot;
@@ -96,6 +96,10 @@ export function SettingsSections({
     setPlatformAudioAction(action);
     setPlatformAudioError(null);
     try {
+      if (action === "download") {
+        await bridge.openWindowsAudioSetupDownload();
+        return;
+      }
       const result = action === "install"
         ? await bridge.installPlatformAudioSetup()
         : action === "activate"
@@ -624,16 +628,30 @@ export function SettingsSections({
                     ) : null}
                   </>
                 ) : (
-                  <button
-                    className="button-secondary"
-                    disabled={platformAudioBusy || !platformAudioSetup.canActivate}
-                    onClick={() => void runPlatformAudioAction("activate")}
-                    type="button"
-                  >
-                    {platformAudioAction === "activate"
-                      ? messages.platformAudio.verifyingRoute
-                      : messages.platformAudio.verifyRoute}
-                  </button>
+                  <>
+                    {platformAudioSetup.code === "windows_vb_cable_required" ? (
+                      <button
+                        className="button-secondary"
+                        disabled={platformAudioBusy}
+                        onClick={() => void runPlatformAudioAction("download")}
+                        type="button"
+                      >
+                        {platformAudioAction === "download"
+                          ? messages.platformAudio.openingVbCable
+                          : messages.platformAudio.downloadVbCable}
+                      </button>
+                    ) : null}
+                    <button
+                      className="button-secondary"
+                      disabled={platformAudioBusy || !platformAudioSetup.canActivate}
+                      onClick={() => void runPlatformAudioAction("activate")}
+                      type="button"
+                    >
+                      {platformAudioAction === "activate"
+                        ? messages.platformAudio.verifyingRoute
+                        : messages.platformAudio.verifyRoute}
+                    </button>
+                  </>
                 )}
                 {snapshot.app.platform === "win32" ||
                 !(

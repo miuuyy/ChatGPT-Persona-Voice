@@ -22,6 +22,9 @@ test("packaged renderer, updater, preload, and quit lifecycle expose no ambient 
   assert.match(main, /setWindowOpenHandler\(\(\) => \(\{ action: "deny" \}\)\)/);
   assert.match(main, /devServerUrl = !app\.isPackaged && requestedDevServerUrl === EXPECTED_DEV_SERVER_URL/);
   assert.match(main, /EXPECTED_DEV_SERVER_URL = "http:\/\/127\.0\.0\.1:4178"/);
+  assert.match(main, /WINDOWS_VB_CABLE_URL = "https:\/\/vb-audio\.com\/Cable\/"/);
+  assert.match(main, /voice:platform-audio-setup-open-download/);
+  assert.match(preload, /openWindowsAudioSetupDownload/);
   assert.doesNotMatch(main, /const isDev = Boolean\(process\.env\.VITE_DEV_SERVER_URL\)/);
   assert.doesNotMatch(updater, /GH_TOKEN|Authorization:\s*[`'"]/);
   assert.match(main, /CODEX_PERSONA_VOICE_DATA_DIR must be an absolute path/);

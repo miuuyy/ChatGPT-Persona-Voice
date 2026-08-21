@@ -6,7 +6,6 @@ const { NativeFrameParser } = require("./native-protocol.cjs");
 
 const HELPER_NAMES = Object.freeze({
   capture: "cpv-audio-capture",
-  driverManager: "cpv-driver-manager",
   output: "cpv-audio-output",
   route: "cpv-audio-route",
 });

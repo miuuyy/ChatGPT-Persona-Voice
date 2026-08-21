@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld("codexPersonaVoice", {
   completeOnboarding: () => ipcRenderer.invoke("voice:complete-onboarding"),
   refreshReadiness: () => ipcRenderer.invoke("voice:refresh-readiness"),
   refreshPlatformAudioSetup: () => ipcRenderer.invoke("voice:platform-audio-setup-refresh"),
+  openWindowsAudioSetupDownload: () => ipcRenderer.invoke("voice:platform-audio-setup-open-download"),
   installPlatformAudioSetup: () => ipcRenderer.invoke("voice:platform-audio-setup-install"),
   activatePlatformAudioSetup: () => ipcRenderer.invoke("voice:platform-audio-setup-activate"),
   removePlatformAudioSetup: () => ipcRenderer.invoke("voice:platform-audio-setup-remove"),

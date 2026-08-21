@@ -15,10 +15,10 @@ working happy path.
 - Follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 The source relay is implemented and live-accepted for Apple Silicon macOS 14.2+ and NVIDIA Linux
-x64. Windows x64 has implemented source/contracts but no clean physical-host E2E evidence. Linux
+x64. Windows x64 has a packaged VB-CABLE path but limited clean physical-host E2E evidence. Linux
 live evidence covers Ubuntu 24.04/WirePlumber 0.4 and Fedora 42/PipeWire 1.4.11/WirePlumber 0.5.14.
-Windows development must continue to report the clean-binary blocker until the owned sink has a
-Microsoft-signed driver and its explicit Volume Mixer assignment/restoration lifecycle is qualified.
+Windows development must continue to report the separately installed VB-CABLE version and the
+explicit Volume Mixer assignment/restoration lifecycle until that path is broadly qualified.
 Linux clean packaged recovery and broader distribution coverage also remain. Do not turn
 implemented source into a support claim.
 
@@ -36,7 +36,7 @@ The source tree keeps product media, voice references, and the conversion engine
 | `engine/vendor/seed-vc/` | Pinned upstream Seed-VC source; never edit it as ordinary launcher code |
 | `native/macos/` | Core Audio capture/output and atomic update helper |
 | `native/linux/` | PipeWire capture/output and WirePlumber 0.4/0.5 policy assets |
-| `native/windows/` | WASAPI helpers, route verifier, driver manager, and owned sink source |
+| `native/windows/` | WASAPI process-loopback, route verifier, and bounded output helpers |
 | `scripts/` | Reproducible setup, build, packaging, and smoke commands |
 
 Reference WAVs are not trained voice models. Model weights, Python environments, caches, build
@@ -68,9 +68,9 @@ node scripts/linux-audio-policy.cjs inspect
 node scripts/linux-audio-policy.cjs install --reload
 ```
 
-Windows route work must state whether a Microsoft-signed Persona Voice Sink was used. An unsigned
-Hardware Dev Center submission build is source/build evidence only; do not enable test-signing or
-call it a clean-machine result. Record every explicit Volume Mixer assignment and restoration.
+Windows route work must state the VB-CABLE version, whether Windows was restarted after installation,
+and the exact Volume Mixer assignment. A renamed or substitute endpoint is not equivalent to the
+base official VB-CABLE Input. Record every explicit assignment, verification, and restoration.
 
 Live capture and jitter smokes are opt-in because they affect local permissions/audio devices:
 
@@ -112,7 +112,7 @@ native, permissioned, engine, or performance changes.
 
 CI runs these non-permissioned checks plus target-native build/self-tests on macOS, Windows, and
 Linux. A green job proves those build/protocol contracts. It does not prove a live desktop route,
-CUDA performance, Microsoft driver signing, Linux policy recovery, or supported release status.
+CUDA performance, Windows VB-CABLE recovery, Linux policy recovery, or supported release status.
 
 ## Adding a target voice
 

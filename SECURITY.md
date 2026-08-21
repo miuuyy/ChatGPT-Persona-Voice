@@ -9,7 +9,7 @@ model worker. There is no production-supported release or security-response SLA.
 | --- | --- |
 | `main` development tree | Cross-platform source-relay reports/fixes accepted; not production-supported |
 | Local packaged artifacts | Unsupported |
-| Windows clean binary | Externally blocked on Microsoft driver signing; unsupported |
+| Windows `v0.1.1` preview | VB-CABLE prerequisite; not production-supported |
 
 Security fixes normally target the current development tree. Backports are not promised.
 
@@ -48,7 +48,7 @@ Private reporting is especially appropriate for:
 - model/package supply-chain substitution or manifest/hash bypass;
 - release-asset substitution, updater worker escape, or unsafe application replacement;
 - unexpected network transmission of PCM, history, diagnostics, or local identifiers;
-- permission/TCC, Linux policy, or Windows driver/route bypass and misleading readiness state;
+- permission/TCC, Linux policy, or Windows VB-CABLE/route bypass and misleading readiness state;
 - sensitive audio/history exposure across local users;
 - unbounded queues or files that can cause reliable resource exhaustion.
 
@@ -85,7 +85,7 @@ mitigation.
   inherited Python path/home, user-site, MPS fallback, and dynamic-loader injection variables. This
   narrows environment-based module substitution but does not replace clean-install provenance.
 - A passing cross-platform CI job proves non-permissioned build/protocol contracts only. It does not
-  establish live route recovery, a clean Microsoft-signed Windows driver, Linux policy lifecycle,
+  establish live route recovery, a clean Windows VB-CABLE lifecycle, Linux policy lifecycle,
   CUDA behavior, or a secure supported release.
 
 See [Privacy](docs/PRIVACY.md), [Architecture](docs/ARCHITECTURE.md), and

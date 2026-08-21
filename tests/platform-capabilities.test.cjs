@@ -164,4 +164,27 @@ test("platform capabilities require native helpers plus live Linux policy or Win
   assert.equal(required.code, "windows_route_assignment_required");
   assert.equal(required.canActivate, true);
   assert.equal((await windowsSetup.activate({}, {})).status, "ready");
+
+  const missingCable = new PlatformAudioSetupController({
+    platform: "win32",
+    windowsIntegration: {
+      rawProcessRoute: {
+        helperReadiness: async () => ({
+          ready: false,
+          code: "windows_vb_cable_required",
+          detail: "missing",
+        }),
+      },
+      routeLifecycle: { snapshot: () => ({ standbyActive: false }) },
+    },
+  });
+  assert.deepEqual(await missingCable.inspect({}), {
+    status: "action-required",
+    code: "windows_vb_cable_required",
+    detail: "Install VB-CABLE from the official VB-Audio site, restart Windows, then check again",
+    canInstall: false,
+    canActivate: false,
+    requiresRouteAssignment: false,
+    canRemove: false,
+  });
 });

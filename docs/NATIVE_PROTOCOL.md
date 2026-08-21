@@ -98,8 +98,8 @@ Windows separates PCM capture from sink membership verification:
 
 - the capture helper declares `backend: "wasapi-process-loopback"`, Windows build 20348 minimum,
   48 kHz stereo `f32le`, process-tree capture/capture proof, and `supportsSuppression: false`;
-- the route helper declares `backend: "windows-virtual-endpoint-verifier"`, the fixed Persona Voice
-  Sink identity, `routeMutation: false`, `manualAssignmentRequired: true`,
+- the route helper declares `backend: "windows-virtual-endpoint-verifier"`, the verified VB-CABLE
+  Input identity, `virtualCableInstalled`, `routeMutation: false`, `manualAssignmentRequired: true`,
   `restoreMechanism: "manual-volume-mixer"`, current-session membership proof, and event-driven
   monitoring whose notifications are not guaranteed to precede first audio.
 
@@ -107,11 +107,6 @@ The route helper emits `armed` only when no selected live session is on the sink
 all applicable current live sessions are on that exact sink. WASAPI PCM is accepted for conversion
 only in `engaged`. The separate Windows standby lifecycle can consume the same capture and forward it
 through bounded physical-output passthrough while conversion is idle.
-
-The driver manager also uses CPV1 Ready/Error control frames for fixed-resource SetupAPI
-install/self-test/remove operations. It is invoked by the elevated app installer/uninstaller, never
-by the sandboxed renderer flow. It accepts only the packaged driver filenames and requires
-signature/device-state proof; that control path carries no PCM.
 
 ## Output control
 
@@ -127,7 +122,7 @@ frames to stdout. Ready must echo the exact prepared `sampleRate`, `channels`, a
 
 macOS converted-only BlackHole setup additionally requires a non-aggregate default output and
 fully verified device membership. Linux can target an explicit PipeWire object or the resolved
-default. Windows output refuses Persona Voice Sink as its physical destination.
+default. Windows output refuses VB-CABLE Input as its physical destination.
 
 Status reports the backend's explicit running/rebuffer or terminal failure state. Buffer targets
 are configuration values, not measured capture-to-speaker latency.

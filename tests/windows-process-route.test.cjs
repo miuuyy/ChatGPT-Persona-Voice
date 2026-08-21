@@ -36,9 +36,10 @@ function routeReady(state = "armed") {
     helper: "route",
     protocolVersion: 1,
     backend: "windows-virtual-endpoint-verifier",
-    driverInstalled: true,
-    sinkName: "Persona Voice Sink",
-    sinkIdentity: "cpv-persona-voice-sink-v1",
+    virtualCableInstalled: true,
+    virtualCableCount: 1,
+    sinkName: "CABLE Input (VB-Audio Virtual Cable)",
+    sinkIdentity: "vb-audio-vb-cable-input-v1",
     routeMutation: false,
     manualAssignmentRequired: true,
     restoreRequired: true,
@@ -48,7 +49,7 @@ function routeReady(state = "armed") {
     supportsEventDrivenMonitoring: true,
     notificationGuaranteesPreAudio: false,
     proofScope: "current-live-sessions",
-    endpointId: "persona-sink-id",
+    endpointId: "vb-cable-input-id",
     armed: true,
     state,
     originalSuppressed: engaged,
@@ -117,10 +118,11 @@ function fixture() {
       supportsEventDrivenMonitoring: true,
       notificationGuaranteesPreAudio: false,
       proofScope: "current-live-sessions",
-      driverInstalled: true,
-      sinkName: "Persona Voice Sink",
-      sinkIdentity: "cpv-persona-voice-sink-v1",
-      endpointId: "persona-sink-id",
+      virtualCableInstalled: true,
+      virtualCableCount: 1,
+      sinkName: "CABLE Input (VB-Audio Virtual Cable)",
+      sinkIdentity: "vb-audio-vb-cable-input-v1",
+      endpointId: "vb-cable-input-id",
     },
     spawnProcess: (executable, args) => {
       const child = spawns.length === 0 ? routeChild : captureChild;
@@ -148,7 +150,7 @@ async function acquireFixture(value, state = "armed") {
   return { guard, statuses, routeErrors };
 }
 
-test("Windows route arms process-loopback only behind the marker-backed sink guard", async () => {
+test("Windows route arms process-loopback only behind the verified VB-CABLE guard", async () => {
   const value = fixture();
   assert.equal((await value.route.probe(settings)).ready, true);
   assert.deepEqual(await value.route.describe(settings), {
@@ -158,12 +160,60 @@ test("Windows route arms process-loopback only behind the marker-backed sink gua
   });
   const { guard } = await acquireFixture(value);
   assert.deepEqual(value.spawns[0].args, [
-    "--suppression-endpoint-id", "persona-sink-id", "--root-pid", "10",
+    "--suppression-endpoint-id", "vb-cable-input-id", "--root-pid", "10",
   ]);
   assert.deepEqual(value.spawns[1].args, ["--root-pid", "10"]);
   assert.equal(guard.armed, true);
   assert.equal(guard.originalSuppressed, false);
   await guard.close();
+});
+
+test("Windows readiness asks for external VB-CABLE without accepting an unverified sink", async () => {
+  const value = fixture();
+  value.route.probeHelper = async (_path, helper) => helper === "capture" ? {
+    backend: "wasapi-process-loopback",
+    minimumWindowsBuild: 20_348,
+    windowsBuild: 26_100,
+    sampleRate: 48_000,
+    channels: 2,
+    sampleFormat: "f32le",
+    supportsProcessTreeCapture: true,
+    supportsCaptureProof: true,
+    supportsSuppression: false,
+    suppressionBoundary: "owned-virtual-endpoint-required",
+  } : {
+    backend: "windows-virtual-endpoint-verifier",
+    routeMutation: false,
+    manualAssignmentRequired: true,
+    restoreRequired: true,
+    restoreMechanism: "manual-volume-mixer",
+    standbyPassthroughRequired: true,
+    supportsCurrentSessionMembershipProof: true,
+    supportsEventDrivenMonitoring: true,
+    notificationGuaranteesPreAudio: false,
+    proofScope: "current-live-sessions",
+    virtualCableInstalled: false,
+    virtualCableCount: 0,
+    sinkName: "CABLE Input (VB-Audio Virtual Cable)",
+    sinkIdentity: "vb-audio-vb-cable-input-v1",
+  };
+  const readiness = await value.route.helperReadiness();
+  assert.equal(readiness.ready, false);
+  assert.equal(readiness.code, "windows_vb_cable_required");
+  assert.match(readiness.detail, /Install VB-CABLE/);
+
+  value.route.cachedProbe = null;
+  const originalProbe = value.route.probeHelper;
+  value.route.probeHelper = async (helperPath, helper) => {
+    const result = await originalProbe(helperPath, helper);
+    return helper === "route"
+      ? { ...result, virtualCableCount: 2 }
+      : result;
+  };
+  const ambiguous = await value.route.helperReadiness();
+  assert.equal(ambiguous.ready, false);
+  assert.equal(ambiguous.code, "windows_vb_cable_ambiguous");
+  assert.match(ambiguous.detail, /multiple base VB-CABLE Input endpoints/);
 });
 
 test("Windows route exposes PCM only while every live target session is isolated", async () => {

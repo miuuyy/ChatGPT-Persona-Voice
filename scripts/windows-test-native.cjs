@@ -48,7 +48,7 @@ function testWindowsNative({ platform = process.platform, requireAudioDevice = f
   }
   if (requireAudioDevice) {
     const output = selfTest("cpv-audio-output.exe", "output");
-    if (output.backend !== "wasapi-shared-render" || output.personaVoiceSink !== false ||
+    if (output.backend !== "wasapi-shared-render" || output.suppressionSink !== false ||
         output.queueCapacityMs !== 1_500 || output.startupPrebufferMs !== 500) {
       throw new Error("Output helper did not prove its bounded physical-device contract");
     }

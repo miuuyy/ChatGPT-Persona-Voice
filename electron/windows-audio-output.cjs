@@ -61,12 +61,9 @@ class WindowsAudioOutput {
             result.passthroughQueueCapacityMs !== OUTPUT_BOUNDS.passthrough.queueCapacityMs ||
             typeof result.deviceId !== "string" || !result.deviceId ||
             typeof result.deviceName !== "string" || !result.deviceName ||
-            result.personaVoiceSink !== false ||
+            result.suppressionSink !== false ||
             result.usesDefaultDevice !== true) {
           throw new Error("Windows output self-test did not prove the bounded WASAPI contract");
-        }
-        if (result.deviceName === "Persona Voice Sink") {
-          throw new Error("The default Windows output is Persona Voice Sink; choose a physical listening device");
         }
         return {
           ready: true,
@@ -186,8 +183,7 @@ class WindowsAudioOutput {
                 message.passthroughQueueCapacityMs !== OUTPUT_BOUNDS.passthrough.queueCapacityMs ||
                 typeof message.deviceId !== "string" || !message.deviceId ||
                 typeof message.deviceName !== "string" || !message.deviceName ||
-                message.personaVoiceSink !== false ||
-                message.deviceName === "Persona Voice Sink") {
+                message.suppressionSink !== false) {
               finish(new Error("Windows output emitted invalid or unsafe readiness"));
               return;
             }

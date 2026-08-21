@@ -367,18 +367,13 @@ HRESULT validateSink(std::wstring_view requestedId) {
   if (FAILED(result) || (state & DEVICE_STATE_ACTIVE) == 0) {
     return FAILED(result) ? result : HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_AVAILABLE);
   }
-  std::wstring friendlyName;
-  result = cpv::windows::deviceStringProperty(
-      device.Get(), PKEY_Device_FriendlyName, &friendlyName);
-  if (FAILED(result)) return result;
-  if (friendlyName != cpv::windows::kPersonaVoiceSinkName ||
-      !cpv::windows::isPersonaVoiceSink(device.Get())) {
+  if (!cpv::windows::isVbCableInput(device.Get())) {
     return E_ACCESSDENIED;
   }
   return S_OK;
 }
 
-std::vector<std::wstring> installedSinkIds(bool* complete) {
+std::vector<std::wstring> installedVbCableInputIds(bool* complete) {
   *complete = false;
   std::vector<std::wstring> matches;
   ComPtr<IMMDeviceEnumerator> enumerator;
@@ -393,13 +388,7 @@ std::vector<std::wstring> installedSinkIds(bool* complete) {
   for (UINT index = 0; index < count; ++index) {
     ComPtr<IMMDevice> device;
     if (FAILED(devices->Item(index, device.GetAddressOf()))) return {};
-    if (!cpv::windows::isPersonaVoiceSink(device.Get())) continue;
-    std::wstring friendlyName;
-    if (FAILED(cpv::windows::deviceStringProperty(
-            device.Get(), PKEY_Device_FriendlyName, &friendlyName)) ||
-        friendlyName != cpv::windows::kPersonaVoiceSinkName) {
-      return {};
-    }
+    if (!cpv::windows::isVbCableInput(device.Get())) continue;
     LPWSTR rawId = nullptr;
     if (FAILED(device->GetId(&rawId)) || rawId == nullptr) {
       if (rawId != nullptr) CoTaskMemFree(rawId);
@@ -412,14 +401,15 @@ std::vector<std::wstring> installedSinkIds(bool* complete) {
   return matches;
 }
 
-bool emitReady(bool selfTest, bool driverInstalled, bool engaged,
+bool emitReady(bool selfTest, std::size_t virtualCableCount, bool engaged,
                std::wstring_view endpointId = {}) {
   std::ostringstream json;
   json << "{\"type\":\"ready\",\"helper\":\"route\",\"protocolVersion\":1"
        << ",\"backend\":\"windows-virtual-endpoint-verifier\""
-       << ",\"driverInstalled\":" << (driverInstalled ? "true" : "false")
-       << ",\"sinkName\":\"Persona Voice Sink\""
-       << ",\"sinkIdentity\":\"cpv-persona-voice-sink-v1\""
+       << ",\"virtualCableInstalled\":" << (virtualCableCount == 1 ? "true" : "false")
+       << ",\"virtualCableCount\":" << virtualCableCount
+       << ",\"sinkName\":\"CABLE Input (VB-Audio Virtual Cable)\""
+       << ",\"sinkIdentity\":\"vb-audio-vb-cable-input-v1\""
        << ",\"routeMutation\":false"
        << ",\"manualAssignmentRequired\":true"
        << ",\"restoreRequired\":true"
@@ -461,7 +451,7 @@ int runGuard(const std::vector<DWORD>& roots, const std::wstring& sinkId) {
   if (FAILED(result)) {
     return fail(
         "windows_virtual_sink_invalid",
-        "The selected suppression endpoint is not the active signed Persona Voice Sink: " +
+        "The selected suppression endpoint is not the official VB-CABLE Input: " +
             cpv::windows::hresultMessage(result),
         false);
   }
@@ -492,11 +482,11 @@ int runGuard(const std::vector<DWORD>& roots, const std::wstring& sinkId) {
   if (current.anyTargetSessionOutsideSink) {
     return fail(
         "windows_target_route_not_isolated",
-        "Route ChatGPT/Codex to Persona Voice Sink in Windows Volume Mixer before starting voice",
+        "Route ChatGPT/Codex to CABLE Input (VB-Audio Virtual Cable) in Windows Volume Mixer before starting voice",
         false);
   }
   bool engaged = current.anyTargetSession;
-  if (!emitReady(false, true, engaged, sinkId)) return 1;
+  if (!emitReady(false, 1, engaged, sinkId)) return 1;
 
   std::thread inputWatcher([wakeEvent = inventory.wakeEvent()] {
     char byte = 0;
@@ -537,7 +527,7 @@ int runGuard(const std::vector<DWORD>& roots, const std::wstring& sinkId) {
     }
     if (current.anyTargetSessionOutsideSink) {
       fail("windows_target_route_lost",
-           "A live target audio session appeared outside Persona Voice Sink; relay stopped fail-closed",
+           "A live target audio session appeared outside VB-CABLE Input; relay stopped fail-closed",
            false);
       exitCode = 1;
       break;
@@ -623,13 +613,13 @@ int wmain(int argc, wchar_t* argv[]) {
         false);
   } else if (selfTest) {
     bool complete = false;
-    const std::vector<std::wstring> sinks = installedSinkIds(&complete);
+    const std::vector<std::wstring> sinks = installedVbCableInputIds(&complete);
     if (!complete) {
       exitCode = fail("windows_sink_enumeration_failed",
                       "Windows could not enumerate every active render endpoint", false);
     } else {
       exitCode = emitReady(
-          true, sinks.size() == 1, false,
+          true, sinks.size(), false,
           sinks.size() == 1 ? std::wstring_view(sinks.front()) : std::wstring_view{})
           ? 0 : 1;
     }

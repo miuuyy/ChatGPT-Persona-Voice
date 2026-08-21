@@ -10,8 +10,8 @@ its tests and artifacts exist in the repository or a reviewed acceptance/release
 - Linux x64 PipeWire/WirePlumber per-app ingress/bypass policy, native capture/output, and CUDA
   engine profile, with Ubuntu 24.04/WirePlumber 0.4 and Fedora 42/PipeWire 1.4.11/WirePlumber
   0.5.14 live acceptance.
-- Windows x64 process-scoped WASAPI capture/output, owned render-only sink source, route verifier,
-  bounded standby lifecycle, driver manager, and CUDA engine profile.
+- Windows x64 process-scoped WASAPI capture/output, verified external VB-CABLE route, bounded
+  standby lifecycle, and CUDA engine profile.
 - Cross-platform source/in-app engine installer contracts and target-native build/self-tests.
 
 These are implementation facts, not supported-release claims.
@@ -28,18 +28,14 @@ These are implementation facts, not supported-release claims.
 - Publish exact known limitations without collapsing implemented, live-proven, distributable, and
   supported into one status.
 
-## Gate A: Windows clean binary
+## Gate A: Windows qualification
 
-- Submit the owned Persona Voice Sink package and obtain Microsoft kernel-policy signing.
-- Feed only the verified signed INF/CAT/SYS package into the protected Windows build environment.
-- Qualify elevated install, self-test, rollback, update, removal, reboot, and crash recovery.
+- Qualify the external VB-CABLE install, reboot, detection, assignment, restoration, and removal flow.
 - Qualify and harden the current in-app verification plus explicit Volume Mixer
   assignment/restoration lifecycle (or replace it with a separately reviewed deterministic
   mechanism), including the notification-before-audio gap.
 - Prove bounded standby audibility and original-audio suppression across session recreation.
 - Add Authenticode, SmartScreen/reputation, clean-machine NVIDIA, and end-to-end performance evidence.
-
-Unsigned/test-signed driver output is not a completion route.
 
 ## Gate B: Linux packaged lifecycle
 
@@ -92,6 +88,6 @@ Codex CLI discovery does not satisfy this gate.
 - Hidden source-audio or identity conversion to make readiness look successful.
 - Keyword or OS-name routers that override adapter evidence.
 - Silent model/profile downgrade.
-- Shipping unsigned drivers or unverified model downloads.
+- Bundling third-party drivers or shipping unverified model downloads.
 - Claiming sub-second or p95 latency from a single inference microbenchmark.
 - Bundling OpenAI proprietary branding/assets or implying official product status.

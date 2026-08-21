@@ -32,7 +32,7 @@ source application's own network traffic.
 | Model runtime | Python environment, model files, install manifest | Source `runtime/seed-vc/` in development; user-data `engine/seed-vc/` when packaged | Until manually removed or **Remove engine** |
 | Voice references | Selected target conditioning samples | Repository/package resources | Shipped with source/artifact |
 | Linux audio policy | Managed PipeWire/WirePlumber config plus activation receipt | Per-user XDG config/data/state roots | Until in-app **Remove route…**, `linux-audio-policy.cjs remove --reload`, or account removal |
-| Windows per-app output policy | Assignment of ChatGPT/Codex to Persona Voice Sink | Windows Sound/Volume Mixer policy | Until restored by the user/OS |
+| Windows per-app output policy | Assignment of ChatGPT/Codex to VB-CABLE Input | Windows Sound/Volume Mixer policy | Until restored by the user/OS |
 
 The default user-data root is Electron's application-data location under `Codex Persona Voice`.
 Developers can override it with an absolute `CODEX_PERSONA_VOICE_DATA_DIR` path.
@@ -47,7 +47,7 @@ storage.
 
 The platform capture helper sends engaged `f32le` PCM to Electron over stdout using CPV1: a Core
 Audio process tap on macOS, an owned PipeWire ingress monitor on Linux, or process-scoped WASAPI
-loopback on Windows after the selected live sessions are verified on Persona Voice Sink. Electron
+loopback on Windows after the selected live sessions are verified on VB-CABLE Input. Electron
 sends exact 300 ms blocks to the Seed-VC worker over CPVE. No raw-audio file or network socket is
 part of this path, and logging code records metadata/errors rather than PCM bodies.
 
@@ -102,7 +102,8 @@ The following explicit setup actions use the network:
 - `setup:engine` downloads pinned model files through Hugging Face Hub;
 - packaged **Install engine** acquires managed Python, locked packages, and the same seven pinned
   model files; cancellation/resume can retain partial downloads in private application data;
-- Git submodule initialization downloads the pinned Seed-VC repository.
+- Git submodule initialization downloads the pinned Seed-VC repository;
+- on Windows, an explicit setup button opens the official VB-Audio VB-CABLE page in the browser.
 
 Model revisions and expected SHA-256 values are recorded in `engine/seed-vc/model-lock.json`. Python
 package versions are pinned in the platform requirements lock. Before model code is imported, each
@@ -126,7 +127,7 @@ support and engine steps; it does not infer a locale from the OS. The language r
 settings file and can be changed later. The support step optionally opens the fixed repository and
 creator X profile after explicit clicks; neither action is required to continue. It stores only
 `githubOpened`/`xOpened` booleans and cannot verify a star/follow or read either account.
-The UI can also open a voice terms URL or repository URL after an explicit click. The OS browser
+The UI can also open a voice terms URL, repository URL, or the fixed official VB-CABLE page after an explicit click. The OS browser
 then owns those requests.
 
 ChatGPT/Codex voice sessions have their own provider network behavior. Capturing their local output
@@ -142,9 +143,9 @@ tooling, not a remote conversion service.
 macOS transparent capture uses the Audio Capture permission controlled by TCC; the app does not
 bypass that prompt. Linux's in-app setup worker installs only managed per-user PipeWire/WirePlumber
 files and restarts the user audio services after explicit user action; unmanaged conflicting files
-are not replaced or removed. Windows requires a Microsoft-signed Persona Voice Sink on a clean
-machine. Only the elevated app installer changes that driver; per-app assignment/restoration may
-still be explicit in Volume Mixer. Graceful Quit blocks for restoration confirmation, but a
+are not replaced or removed. Windows uses VB-CABLE installed separately from the official VB-Audio
+site; Persona Voice does not download, install, update, or remove that driver. Per-app assignment and
+restoration are explicit in Volume Mixer. Graceful Quit blocks for restoration confirmation, but a
 crash/force-kill can leave the OS-owned preference pointing at the sink. Source discovery enumerates
 local process metadata and, on Linux, PipeWire stream metadata.
 
@@ -158,8 +159,8 @@ data:
 
 1. stop and quit the app cleanly;
 2. use Clear history first if the UI is available;
-3. on Windows, restore ChatGPT/Codex from Persona Voice Sink to **Default** or the physical output
-   in Volume Mixer, then follow the elevated uninstaller prompts that remove the driver;
+3. on Windows, restore ChatGPT/Codex from VB-CABLE Input to **Default** or the physical output
+   in Volume Mixer; remove VB-CABLE separately only if it is no longer needed by other software;
 4. on Linux, use **Settings → Application → Remove route…** (or
    `node scripts/linux-audio-policy.cjs remove --reload` in development) before deleting the app;
 5. use **Settings → Voice → Remove…** for the packaged engine, then remove the dedicated user-data

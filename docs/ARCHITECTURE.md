@@ -1,9 +1,8 @@
 # Architecture
 
 Status: the native relay is implemented and live-accepted for Apple Silicon macOS and NVIDIA Linux
-x64. Windows x64 has implemented source/contracts for WASAPI capture/output, owned-sink routing,
-standby lifecycle, and CUDA engine setup, but no clean physical-Windows E2E acceptance. Its binary
-remains externally blocked on a Microsoft-signed virtual-sink driver. This is not release assurance.
+x64. Windows x64 has a packaged WASAPI/VB-CABLE path, standby lifecycle, and CUDA engine setup, but
+still needs clean physical-Windows end-to-end acceptance. This is not release assurance.
 
 ## Product boundary
 
@@ -27,7 +26,7 @@ and performance gates remain in [Release engineering](RELEASE.md).
 | Electron renderer | Presentation and user intent | Sandboxed, context-isolated, no Node.js |
 | Electron main | Validated IPC, settings, discovery, pipeline lifecycle, history, logs | Resolves filesystem paths and child processes |
 | Platform capture/route helper | Process-scoped route ownership, suppression proof, CPV1 PCM | Native child process; Core Audio, PipeWire, or WASAPI |
-| `Persona Voice Sink` on Windows | Owned render-only endpoint used as the suppressing boundary | Kernel driver; requires Microsoft-signed package on a clean machine |
+| VB-CABLE Input on Windows | Separately installed virtual endpoint used as the suppressing boundary | Third-party signed driver from VB-Audio; never bundled by Persona Voice |
 | Seed-VC worker | Local model load, streaming conversion, SOLA state | Separate GPL Python process over CPVE pipes |
 | Platform output helper | Exact-format converted playback and bounded buffering | Native child process over CPV1 |
 
@@ -68,29 +67,28 @@ The x64 `linux-x64-cuda130` engine profile and native PipeWire output helper com
 path. Live acceptance covers Ubuntu 24.04 with WirePlumber 0.4 and Fedora 42 with PipeWire 1.4.11 /
 WirePlumber 0.5.14.
 
-### Windows: WASAPI plus owned virtual sink
+### Windows: WASAPI plus VB-CABLE
 
 Windows process-scoped WASAPI loopback captures one selected process tree on build 20348 or newer.
-Loopback alone cannot silence the app's normal endpoint, so the suppressing boundary is the owned,
-render-only `Persona Voice Sink` driver. The route verifier proves that current live sessions for
-the selected process tree are attached to that exact endpoint and monitors session changes. It
+Loopback alone cannot silence the app's normal endpoint, so the suppressing boundary is the
+separately installed VB-CABLE render endpoint. The route verifier identifies the official driver by
+its endpoint description and adapter properties, proves that current live sessions for the selected
+process tree are attached to that exact endpoint, and monitors session changes. It
 explicitly declares `routeMutation: false`: it verifies policy but does not assign it.
 
-The current lifecycle uses bounded WASAPI standby passthrough from Persona Voice Sink to the physical
+The current lifecycle uses bounded process-loopback standby passthrough from VB-CABLE Input to the physical
 default while conversion is idle, then transfers the captured frames to the conversion pipeline.
 Converted PCM returns through a bounded WASAPI shared-render output helper. The x64
 `windows-x64-cuda130` profile supplies the local CUDA engine.
 
-The driver source and fixed-resource SetupAPI manager are implemented, but a normal Windows system
-requires a Microsoft kernel-policy-signed driver package. Packaging rejects unsigned input. The
-elevated NSIS installer invokes the manager for install and, after explicit route-restoration prompts,
-for uninstall. The in-app platform-audio step guides assignment and starts standby verification, but
-users may still need to assign ChatGPT/Codex to Persona Voice Sink in Volume Mixer and restore it to
-Default or the physical device before quit/uninstall.
+Persona Voice never downloads or bundles VB-CABLE. The in-app platform-audio step opens the official
+VB-Audio page, asks the user to install the signed driver and restart Windows, then guides assignment
+and starts standby verification. Users assign ChatGPT/Codex to **CABLE Input** in Volume Mixer and
+restore it to Default or the physical device before removing VB-CABLE.
 
 Graceful Quit is blocked while the retained route may persist and requires user-confirmed
 restoration. The OS does not expose proof that the persistent per-app preference was reset, and a
-crash/force-kill can leave the source assigned to Persona Voice Sink. Monitoring proves only current
+crash/force-kill can leave the source assigned to VB-CABLE Input. Monitoring proves only current
 live sessions; `OnSessionCreated` is not guaranteed before a session's first sample.
 
 ### Owned Codex realtime session: contract only
@@ -108,7 +106,7 @@ selected ChatGPT/Codex process tree
 platform route adapter
   macOS: detached tap → muted process tap
   Linux: owned ingress + bypass → guarded capture + bypass mute
-  Windows: assigned owned sink + standby → verified sink capture
+  Windows: assigned VB-CABLE Input + standby → verified process-loopback capture
         │ CPV1 f32le, only after platform engagement proof
         ▼
 Electron conversion queue (1,000 ms target; 6,000 ms safety bound)
@@ -244,8 +242,8 @@ use atomic replacement; POSIX-capable systems receive private modes where possib
 - Converted history is PCM16 WAV and is disabled by default. Default retention is six hours;
   disabling history does not delete existing files.
 - Linux policy files live in per-user XDG configuration/data roots and have explicit in-app
-  install/remove/reload actions. Windows driver changes stay inside the elevated installer, while
-  per-app Volume Mixer policy remains OS-owned and may require manual restoration.
+  install/remove/reload actions. VB-CABLE is installed separately from VB-Audio; Windows per-app
+  Volume Mixer policy remains OS-owned and may require manual restoration.
 
 See [Privacy](PRIVACY.md) for network, storage, permission, and deletion boundaries.
 
@@ -254,8 +252,8 @@ See [Privacy](PRIVACY.md) for network, storage, permission, and deletion boundar
 Implemented in the development tree:
 
 - Electron renderer, validated preload IPC, tray/autostart, local state, and diagnostics;
-- macOS Core Audio and Linux PipeWire/WirePlumber relay adapters, plus Windows
-  WASAPI/owned-sink source/contracts awaiting physical-host acceptance;
+- macOS Core Audio and Linux PipeWire/WirePlumber relay adapters, plus the packaged Windows
+  WASAPI/VB-CABLE path awaiting broader physical-host acceptance;
 - native capture/output helpers and CPV1 framing on all three target platforms;
 - pinned MPS and x64 CUDA 13.0 Seed-VC profiles, CPVE worker, and verified source/in-app installer;
 - twelve integrity-checked VOICEVOX references, one community JARVIS reference, and one disclosed
@@ -265,8 +263,7 @@ Implemented in the development tree:
 
 Remaining or externally blocked:
 
-- Microsoft signing and clean-binary qualification of the Windows virtual sink;
-- Windows per-app assignment/restore and crash/restart/uninstall recovery qualification;
+- Windows VB-CABLE install/assignment/restore and crash/restart recovery qualification;
 - Linux clean packaged policy recovery qualification and broader distribution/session coverage;
 - production signing/notarization, supported installers, and clean-machine qualification;
 - representative end-to-end latency and long-session recovery evidence;

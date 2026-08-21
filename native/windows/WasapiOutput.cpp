@@ -262,8 +262,8 @@ void stopInputReader(BoundedAudioQueue* queue, std::thread* reader) {
 }
 
 HRESULT resolveDefaultOutput(ComPtr<IMMDevice>* device, std::string* id, std::string* name,
-                             bool* personaVoiceSink) {
-  if (device == nullptr || id == nullptr || name == nullptr || personaVoiceSink == nullptr) {
+                             bool* suppressionSink) {
+  if (device == nullptr || id == nullptr || name == nullptr || suppressionSink == nullptr) {
     return E_POINTER;
   }
   ComPtr<IMMDeviceEnumerator> enumerator;
@@ -293,8 +293,7 @@ HRESULT resolveDefaultOutput(ComPtr<IMMDevice>* device, std::string* id, std::st
     result = E_FAIL;
   }
   PropVariantClear(&value);
-  *personaVoiceSink = cpv::windows::isPersonaVoiceSink(device->Get()) ||
-      *name == cpv::windows::utf8FromWide(cpv::windows::kPersonaVoiceSinkName);
+  *suppressionSink = cpv::windows::isVbCableInput(device->Get());
   return result;
 }
 
@@ -321,7 +320,7 @@ bool emitReady(std::uint32_t sampleRate, std::uint16_t channels,
        << ",\"bufferFrames\":" << bufferFrames
        << ",\"deviceId\":\"" << cpv::windows::jsonEscape(deviceId) << "\""
        << ",\"deviceName\":\"" << cpv::windows::jsonEscape(deviceName) << "\""
-       << ",\"personaVoiceSink\":false"
+       << ",\"suppressionSink\":false"
        << ",\"usesDefaultDevice\":true"
        << ",\"selfTest\":" << (selfTest ? "true" : "false") << "}";
   return cpv::windows::writeJSON(cpv::FrameType::Ready, json.str());
@@ -347,13 +346,13 @@ int runOutput(std::uint32_t sampleRate, std::uint16_t channels,
   ComPtr<IMMDevice> device;
   std::string deviceId;
   std::string deviceName;
-  bool personaVoiceSink = false;
-  HRESULT result = resolveDefaultOutput(&device, &deviceId, &deviceName, &personaVoiceSink);
+  bool suppressionSink = false;
+  HRESULT result = resolveDefaultOutput(&device, &deviceId, &deviceName, &suppressionSink);
   if (FAILED(result)) return failHRESULT("output_device_missing", "Default Windows output discovery", result);
-  if (personaVoiceSink) {
+  if (suppressionSink) {
     return fail(
         "output_device_is_suppression_sink",
-        "The default Windows output is Persona Voice Sink; choose a physical listening device");
+        "The default Windows output is VB-CABLE Input; choose a physical listening device");
   }
 
   if (selfTest) {

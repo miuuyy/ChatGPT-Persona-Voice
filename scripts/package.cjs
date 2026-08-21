@@ -23,11 +23,6 @@ function sha256File(filePath) {
 const root = path.resolve(__dirname, "..");
 const packageMetadata = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
 const executable = process.execPath;
-const {
-  PACKAGE_FILES: WINDOWS_DRIVER_FILES,
-  verifyMicrosoftSignedPackage,
-} = require("./windows-build-driver.cjs");
-const { assertWindowsReleasePayload } = require("./windows-release-gate.cjs");
 
 function prepareUpdaterRuntime() {
   const expectedVersion = /^bun@(.+)$/.exec(packageMetadata.packageManager)?.[1];
@@ -102,24 +97,6 @@ function prepareEngineInstallerRuntime() {
   );
 }
 
-function prepareWindowsDriverPackage() {
-  const configured = process.env.CODEX_PERSONA_VOICE_SIGNED_DRIVER_DIR?.trim();
-  if (!configured || !path.isAbsolute(configured)) {
-    throw new Error(
-      "Windows packaging requires CODEX_PERSONA_VOICE_SIGNED_DRIVER_DIR with the Microsoft-signed Persona Voice Sink package",
-    );
-  }
-  const source = fs.realpathSync(configured);
-  verifyMicrosoftSignedPackage(source);
-  const destination = path.join(root, "native", "bin", "win32", "driver");
-  fs.rmSync(destination, { recursive: true, force: true });
-  fs.mkdirSync(destination, { recursive: true, mode: 0o755 });
-  for (const name of WINDOWS_DRIVER_FILES) {
-    fs.copyFileSync(path.join(source, name), path.join(destination, name));
-  }
-  assertWindowsReleasePayload(path.dirname(destination));
-}
-
 const electronBuilderCli = require.resolve("electron-builder/out/cli/cli.js", { paths: [root] });
 const requested = process.argv[2];
 const target = requested || (process.platform === "darwin" ? "--mac"
@@ -141,7 +118,6 @@ if (target !== nativeTarget) {
 }
 prepareUpdaterRuntime();
 prepareEngineInstallerRuntime();
-if (target === "--win") prepareWindowsDriverPackage();
 const artifactOs = target.slice(2);
 const artifactPrefix = `codex-persona-voice-${packageMetadata.version}-${artifactOs}-`;
 

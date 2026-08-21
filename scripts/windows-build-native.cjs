@@ -11,7 +11,6 @@ const TARGETS = Object.freeze([
   "cpv-audio-capture.exe",
   "cpv-audio-output.exe",
   "cpv-audio-route.exe",
-  "cpv-driver-manager.exe",
 ]);
 
 function run(command, args) {

@@ -28,7 +28,7 @@ function fakeChild() {
 
 function nativeReady({
   name = "Speakers",
-  personaVoiceSink = false,
+  suppressionSink = false,
   mode = "converted",
 } = {}) {
   const bounds = mode === "passthrough"
@@ -54,7 +54,7 @@ function nativeReady({
     bufferFrames: 480,
     deviceId: "physical-output-id",
     deviceName: name,
-    personaVoiceSink,
+    suppressionSink,
     usesDefaultDevice: true,
   })));
 }
@@ -78,7 +78,7 @@ function fixture(child = fakeChild(), probe = {}) {
       passthroughQueueCapacityMs: 250,
       deviceId: "physical-output-id",
       deviceName: "Speakers",
-      personaVoiceSink: false,
+      suppressionSink: false,
       usesDefaultDevice: true,
       ...probe,
     }),
@@ -124,14 +124,14 @@ test("Windows output writes CPV1 PCM only after bounded physical WASAPI readines
   await session.close();
 });
 
-test("Windows output rejects the Persona Voice suppression endpoint", async () => {
+test("Windows output rejects VB-CABLE as the physical listening endpoint", async () => {
   const { output } = fixture(fakeChild(), {
-    deviceName: "Persona Voice Sink",
-    personaVoiceSink: true,
+    deviceName: "CABLE Input (VB-Audio Virtual Cable)",
+    suppressionSink: true,
   });
   const probe = await output.probe();
   assert.equal(probe.ready, false);
-  assert.match(probe.detail, /Persona Voice Sink|bounded WASAPI/i);
+  assert.match(probe.detail, /bounded WASAPI/i);
 });
 
 test("Windows output rejects native readiness that loses the sink identity proof", async () => {
@@ -140,7 +140,7 @@ test("Windows output rejects native readiness that loses the sink identity proof
     {}, { sampleRate: 24_000, channels: 1, sampleFormat: "f32le" }, () => {},
   );
   await nextTurn();
-  child.stdout.emit("data", nativeReady({ personaVoiceSink: true }));
+  child.stdout.emit("data", nativeReady({ suppressionSink: true }));
   await assert.rejects(preparing, /invalid or unsafe readiness/);
 });
 

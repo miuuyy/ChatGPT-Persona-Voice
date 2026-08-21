@@ -52,6 +52,7 @@ const PRODUCT_NAME = "Codex Persona Voice";
 const APP_ID = "dev.miuuyy.codexpersonavoice";
 const REPOSITORY_URL = "https://github.com/miuuyy/ChatGPT-Persona-Voice";
 const X_URL = "https://x.com/miu21590";
+const WINDOWS_VB_CABLE_URL = "https://vb-audio.com/Cable/";
 const APP_ICON_PATH = path.join(__dirname, "..", "assets", "icon.png");
 const PACKAGED_RENDERER_URL = pathToFileURL(path.join(__dirname, "..", "dist", "index.html")).href;
 const EXPECTED_DEV_SERVER_URL = "http://127.0.0.1:4178";
@@ -507,6 +508,13 @@ function registerIpc() {
     await broadcastSnapshot();
     return result;
   });
+  handle("voice:platform-audio-setup-open-download", async () => {
+    if (process.platform !== "win32") {
+      throw new Error("VB-CABLE setup is available only on Windows");
+    }
+    await shell.openExternal(WINDOWS_VB_CABLE_URL);
+    return true;
+  });
   handle("voice:platform-audio-setup-install", async () => {
     return stoppedMutationGate.run("platform audio setup", async () => {
       const result = await platformAudioSetup.install(stateStore.read().settings);
@@ -518,8 +526,6 @@ function registerIpc() {
   handle("voice:platform-audio-setup-activate", async () => {
     return stoppedMutationGate.run("platform audio route activation", async () => {
       if (!windowsIntegration) throw new Error("Windows audio route activation is unavailable");
-      stateStore.setSetting("windowsManualRouteConfigured", true);
-      windowsIntegration.routeLifecycle.markManualRouteConfigured();
       const result = await platformAudioSetup.activate(
         stateStore.read().settings,
         windowsStandbyHandlers(),
@@ -938,12 +944,6 @@ async function start() {
         resourcesPath: process.resourcesPath,
       })
     : null;
-  const driverManagerHelperPath = process.platform === "win32"
-    ? resolveNativeHelperPath("driverManager", {
-        isPackaged: app.isPackaged,
-        resourcesPath: process.resourcesPath,
-      })
-    : null;
   capabilities = probePlatformCapabilities({
     helperPaths: { capture: captureHelperPath, output: outputHelperPath, route: routeHelperPath },
   });
@@ -960,7 +960,6 @@ async function start() {
       captureHelperPath,
       outputHelperPath,
       routeHelperPath,
-      driverManagerHelperPath,
       logger,
       lifecycleOptions: {
         manualRouteConfigured: stateStore.read().settings.windowsManualRouteConfigured,

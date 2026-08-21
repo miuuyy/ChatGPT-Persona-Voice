@@ -76,8 +76,9 @@ https://github.com/user-attachments/assets/f43f9f90-a76f-4984-b061-145aa7db5467
 
 ### Download and use
 
-Download the latest macOS or Linux build from [Releases](https://github.com/miuuyy/ChatGPT-Persona-Voice/releases/latest).
-Windows is currently source-only while the required virtual-audio driver awaits Microsoft signing.
+Download the latest macOS, Windows, or Linux build from [Releases](https://github.com/miuuyy/ChatGPT-Persona-Voice/releases/latest).
+Windows setup links to the official [VB-CABLE](https://vb-audio.com/Cable/) download; install it
+separately, restart Windows, and follow the in-app Volume Mixer step.
 
 1. Launch Persona Voice and complete the guided engine and system-audio setup.
 2. Open ChatGPT or Codex, then choose the source app and target voice in Persona Voice.
@@ -97,6 +98,7 @@ Requirements:
   `pkg-config`/PipeWire development headers on Linux, or MSVC/CMake/Windows SDK on Windows;
 - engine space: approximately 2.5 GiB installed and 6 GiB free on macOS, 9 GiB installed and
   15 GiB free on Windows, or 11 GiB installed and 15 GiB free on Linux.
+- Windows also requires the official VB-CABLE driver, installed separately from VB-Audio.
 
 ```bash
 git clone --recurse-submodules https://github.com/miuuyy/ChatGPT-Persona-Voice.git
@@ -115,7 +117,7 @@ platform setup, native build commands, and contributor verification.
 | --- | --- | --- |
 | Apple Silicon macOS 14.2+ | Preview package available | MPS; production signing/notarization and clean-machine qualification remain |
 | Linux x64 + NVIDIA | Preview package available | CUDA 13.0, PipeWire, and WirePlumber; broader distribution coverage remains |
-| Windows x64 + NVIDIA, build 20348+ | Source only | Public package waits for a Microsoft-signed virtual-audio driver |
+| Windows x64 + NVIDIA, build 20348+ | Preview package available | CUDA 13.0 and separately installed VB-CABLE; physical-host feedback is welcome |
 | Other hosts | Unavailable | Unsupported |
 
 See the detailed

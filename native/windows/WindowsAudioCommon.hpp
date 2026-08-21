@@ -33,12 +33,13 @@ namespace cpv::windows {
 
 using Microsoft::WRL::ComPtr;
 
-inline constexpr PROPERTYKEY kPersonaVoiceSinkIdentityKey{
-    {0x4ee03b19, 0x3d58, 0x43a8, {0xbf, 0xbd, 0x7a, 0x14, 0x32, 0x37, 0xd0, 0xf0}},
-    2,
-};
-inline constexpr wchar_t kPersonaVoiceSinkIdentity[] = L"cpv-persona-voice-sink-v1";
-inline constexpr wchar_t kPersonaVoiceSinkName[] = L"Persona Voice Sink";
+// These values come from VB-Audio's signed VBCABLE_Driver_Pack45 INF. Unlike
+// PKEY_Device_FriendlyName, users cannot rename the endpoint description or
+// adapter interface name from the Windows Sound control panel.
+inline constexpr wchar_t kVbCableInputDeviceDescription[] = L"CABLE Input";
+inline constexpr wchar_t kVbCableInterfaceFriendlyName[] = L"VB-Audio Point";
+inline constexpr wchar_t kVbCableInputDisplayName[] = L"CABLE Input (VB-Audio Virtual Cable)";
+inline constexpr char kVbCableInputIdentity[] = "vb-audio-vb-cable-input-v1";
 
 inline bool setBinaryStandardStreams(bool includeInput) {
   if (_setmode(_fileno(stdout), _O_BINARY) == -1) return false;
@@ -171,10 +172,14 @@ inline HRESULT deviceStringProperty(IMMDevice* device, const PROPERTYKEY& key,
   return result;
 }
 
-inline bool isPersonaVoiceSink(IMMDevice* device) {
-  std::wstring identity;
-  return SUCCEEDED(deviceStringProperty(device, kPersonaVoiceSinkIdentityKey, &identity)) &&
-      identity == kPersonaVoiceSinkIdentity;
+inline bool isVbCableInput(IMMDevice* device) {
+  std::wstring description;
+  std::wstring interfaceName;
+  return SUCCEEDED(deviceStringProperty(device, PKEY_Device_DeviceDesc, &description)) &&
+      SUCCEEDED(deviceStringProperty(
+          device, PKEY_DeviceInterface_FriendlyName, &interfaceName)) &&
+      description == kVbCableInputDeviceDescription &&
+      interfaceName == kVbCableInterfaceFriendlyName;
 }
 
 inline bool parseUnsigned(std::string_view value, std::uint32_t minimum,
