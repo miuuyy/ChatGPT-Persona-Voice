@@ -39,7 +39,9 @@ binary frame type.
 | 12 | samples per channel | `uint32` | greater than zero |
 | 16 | PCM | bytes | exactly `samples × channels × 4` |
 
-Capture sequence gaps are terminal in Electron. Format changes after preparation are also terminal.
+Each newly opened capture stream establishes its sequence baseline from its first delivered frame.
+Sequence gaps after that baseline are terminal in Electron. Format changes after preparation are also
+terminal.
 
 ## Capture and route control
 
