@@ -563,6 +563,7 @@ class WindowsProcessRoute {
     if (typeof onFrame !== "function" || typeof onError !== "function") {
       throw new Error("Windows capture frame and error handlers are required");
     }
+    this.expectedSequence = null;
     this.frameHandler = onFrame;
     this.streamErrorHandler = onError;
     return {
