@@ -39,9 +39,10 @@ test("Windows route verifies the official VB-CABLE endpoint and uses no private 
   assert.match(route, /virtualCableCount/);
   assert.match(route, /isVbCableInput/);
   assert.match(common, /PKEY_Device_DeviceDesc/);
-  assert.match(common, /PKEY_DeviceInterface_FriendlyName/);
+  assert.match(common, /PKEY_Device_MatchingDeviceId/);
   assert.match(common, /kVbCableInputDeviceDescription\[\] = L"CABLE Input"/);
-  assert.match(common, /kVbCableInterfaceFriendlyName\[\] = L"VB-Audio Point"/);
+  assert.match(common, /kVbCableMatchingDeviceId\[\] = L"VBAudioVACWDM"/);
+  assert.doesNotMatch(common, /PKEY_DeviceInterface_FriendlyName/);
   assert.doesNotMatch(route, /IAudioPolicyConfig|SetPersistedDefaultAudioEndpoint|RoGetActivationFactory/);
   assert.doesNotMatch(route, /ISimpleAudioVolume|SetMute\(/);
 });
