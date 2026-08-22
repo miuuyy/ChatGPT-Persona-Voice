@@ -1,6 +1,6 @@
 {
   "name": "codex-persona-voice",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "Local-first realtime voice relay for Codex and ChatGPT",
   "author": "miuuyy",

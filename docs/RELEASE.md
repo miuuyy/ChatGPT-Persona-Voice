@@ -1,6 +1,6 @@
 # Release engineering
 
-Status: `v0.1.1` is the preview release for macOS, Windows, and Linux. Windows uses VB-CABLE as a
+Status: `v0.1.2` is the preview release for macOS, Windows, and Linux. Windows uses VB-CABLE as a
 separately installed prerequisite and still needs broader physical-host acceptance.
 
 The repository contains complete live-accepted source paths for Apple Silicon macOS and NVIDIA
@@ -176,7 +176,7 @@ Final artifacts must deliver and audit:
 
 ## Versioning
 
-The package currently reports `0.1.1`; publication requires the exact matching `v0.1.1` tag (or the
+The package currently reports `0.1.2`; publication requires the exact matching `v0.1.2` tag (or the
 matching future version). Until a public compatibility contract exists, CPV1, CPVE, settings, route
 policy, and adapter changes may be breaking and must be called out in release notes.
 

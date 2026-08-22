@@ -151,6 +151,9 @@ test("tag releases publish macOS, Windows, and Linux assets with one canonical c
     assert.match(workflow, new RegExp(runner));
   }
   assert.match(workflow, /artifacts\/\*\.exe/);
+  assert.match(ciWorkflow, /windows-smoke-installer\.ps1/);
+  assert.match(workflow, /windows-smoke-installer\.ps1/);
+  assert.match(workflow, /--use-mock-keychain --verify-packaged-renderer/);
   assert.match(workflow, /tags: \["v\*"\]/);
   assert.match(ciWorkflow, /bun-version: 1\.3\.14/);
   assert.match(workflow, /bun-version: 1\.3\.14/);
@@ -185,6 +188,7 @@ test("packaged Electron disables unsafe runtime switches and validates its ASAR"
   assert.match(fuseHook, /FuseV1Options\.RunAsNode\]:\s*false/);
   assert.match(fuseHook, /FuseV1Options\.EnableEmbeddedAsarIntegrityValidation\]:\s*true/);
   assert.match(fuseHook, /FuseV1Options\.OnlyLoadAppFromAsar\]:\s*true/);
+  assert.match(fuseHook, /FuseV1Options\.GrantFileProtocolExtraPrivileges\]:\s*false/);
   assert.match(fuseHook, /FuseV1Options\.WasmTrapHandlers\]:\s*true/);
   for (const unusedKey of [
     "NSMicrophoneUsageDescription",

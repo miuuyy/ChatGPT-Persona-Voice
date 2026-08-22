@@ -255,9 +255,10 @@ Cross-packaging is rejected. The artifacts remain experimental:
 - Windows packaging includes only the three user-mode helpers. VB-CABLE remains a separate
   user-installed prerequisite and is never copied into the package.
 
-The `v0.1.1` tag workflow builds macOS, Windows, and Linux preview packages, regenerates one
+The `v0.1.2` tag workflow builds macOS, Windows, and Linux preview packages, regenerates one
 canonical `SHA256SUMS`, signs that manifest, and creates a draft GitHub Release. Artifact transport
-is not support evidence.
+is not support evidence. CI and the release workflow also install the generated Windows NSIS package
+into a temporary directory and require its packaged renderer to mount successfully before publishing.
 
 ## Pull requests
 

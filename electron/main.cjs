@@ -3,7 +3,6 @@
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const { pathToFileURL } = require("node:url");
 const {
   app,
   BrowserWindow,
@@ -12,7 +11,9 @@ const {
   Menu,
   nativeImage,
   nativeTheme,
+  net,
   powerSaveBlocker,
+  protocol,
   screen,
   session,
   shell,
@@ -37,6 +38,11 @@ const { PipelineRuntime } = require("./pipeline-runtime.cjs");
 const { PlatformAudioSetupController } = require("./platform-audio-setup.cjs");
 const { probePlatformCapabilities } = require("./platform-capabilities.cjs");
 const { createRelayPowerController } = require("./relay-power.cjs");
+const {
+  PACKAGED_RENDERER_URL,
+  installRendererProtocol,
+  registerRendererScheme,
+} = require("./renderer-protocol.cjs");
 const { OBS_RECORDING_DEVICE_UID, createRuntimeAdapters } = require("./runtime-adapters.cjs");
 const { StoppedMutationGate } = require("./stopped-mutation-gate.cjs");
 const { SeedVcEngine, resolveSeedVcPaths } = require("./seed-vc-engine.cjs");
@@ -54,7 +60,6 @@ const REPOSITORY_URL = "https://github.com/miuuyy/ChatGPT-Persona-Voice";
 const X_URL = "https://x.com/miu21590";
 const WINDOWS_VB_CABLE_URL = "https://vb-audio.com/Cable/";
 const APP_ICON_PATH = path.join(__dirname, "..", "assets", "icon.png");
-const PACKAGED_RENDERER_URL = pathToFileURL(path.join(__dirname, "..", "dist", "index.html")).href;
 const EXPECTED_DEV_SERVER_URL = "http://127.0.0.1:4178";
 const requestedDevServerUrl = process.env.VITE_DEV_SERVER_URL?.trim() || null;
 const devServerUrl = !app.isPackaged && requestedDevServerUrl === EXPECTED_DEV_SERVER_URL
@@ -62,6 +67,9 @@ const devServerUrl = !app.isPackaged && requestedDevServerUrl === EXPECTED_DEV_S
   : null;
 const invalidDevServerUrl = !app.isPackaged && requestedDevServerUrl !== null && devServerUrl === null;
 const isDev = devServerUrl !== null;
+const rendererSmoke = process.argv.includes("--verify-packaged-renderer");
+
+registerRendererScheme(protocol);
 
 const PRODUCTION_CSP = [
   "default-src 'self'",
@@ -831,6 +839,16 @@ async function start() {
   }
   app.on("second-instance", showMainWindow);
   await app.whenReady();
+  if (rendererSmoke && !app.isPackaged) {
+    throw new Error("Packaged renderer verification requires an installed or unpacked application");
+  }
+  if (!isDev) {
+    installRendererProtocol({
+      protocol,
+      net,
+      rendererRoot: path.join(__dirname, "..", "dist"),
+    });
+  }
   nativeTheme.themeSource = "dark";
   if (isDev && process.platform === "darwin") {
     const dockIcon = nativeImage.createFromPath(APP_ICON_PATH);
@@ -1042,14 +1060,30 @@ async function start() {
     setAutostart(app, persisted.launchAtLogin);
   }
 
-  const startHidden = process.argv.includes("--hidden") && stateStore.read().onboarding.complete;
+  const startHidden = rendererSmoke ||
+    (process.argv.includes("--hidden") && stateStore.read().onboarding.complete);
   mainWindow = createWindow({ startHidden });
   registerIpc();
+  if (rendererSmoke) {
+    await mainWindow.loadURL(PACKAGED_RENDERER_URL);
+    const mounted = await mainWindow.webContents.executeJavaScript(
+      "Boolean(document.querySelector('#root')?.childElementCount)",
+      true,
+    );
+    if (!mounted) throw new Error("Packaged renderer loaded but React did not mount");
+    fs.writeFileSync(
+      path.join(userDataDirectory, "renderer-smoke-ok.json"),
+      `${JSON.stringify({ version: app.getVersion(), url: PACKAGED_RENDERER_URL })}\n`,
+      { mode: 0o600 },
+    );
+    app.exit(0);
+    return;
+  }
   const trayAvailable = createTray();
   if (startHidden && !trayAvailable) mainWindow.once("ready-to-show", showMainWindow);
   startCleanupTimer();
   if (isDev) await mainWindow.loadURL(devServerUrl);
-  else await mainWindow.loadFile(path.join(__dirname, "..", "dist", "index.html"));
+  else await mainWindow.loadURL(PACKAGED_RENDERER_URL);
   void updateController.checkOnce();
   logger.info("launcher.started", { platform: process.platform, version: app.getVersion() });
 

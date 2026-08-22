@@ -105,6 +105,11 @@ jobs:
       - name: Build native package
         run: bun run ${{ matrix.command }}
 
+      - name: Verify installed Windows renderer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/windows-smoke-installer.ps1
+
       - name: Verify packaged macOS signature
         if: runner.os == 'macOS'
         run: |
@@ -117,6 +122,16 @@ jobs:
           test "$("$stage/Codex Persona Voice.app/Contents/Resources/updater-runtime/bun" --version)" = "1.3.14"
           test -x "$stage/Codex Persona Voice.app/Contents/Resources/engine-installer/uv"
           test "$("$stage/Codex Persona Voice.app/Contents/Resources/engine-installer/uv" --version | awk '{print $2}')" = "0.11.14"
+          data_dir="$(mktemp -d)"
+          CODEX_PERSONA_VOICE_DATA_DIR="$data_dir" \
+            "$stage/Codex Persona Voice.app/Contents/MacOS/Codex Persona Voice" \
+            --use-mock-keychain --verify-packaged-renderer
+          node -e '
+            const fs = require("node:fs");
+            const path = require("node:path");
+            const marker = JSON.parse(fs.readFileSync(path.join(process.argv[1], "renderer-smoke-ok.json"), "utf8"));
+            if (marker.version !== require("./package.json").version || marker.url !== "persona://app/index.html") process.exit(1);
+          ' "$data_dir"
 
       - name: Upload native artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

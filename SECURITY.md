@@ -9,7 +9,7 @@ model worker. There is no production-supported release or security-response SLA.
 | --- | --- |
 | `main` development tree | Cross-platform source-relay reports/fixes accepted; not production-supported |
 | Local packaged artifacts | Unsupported |
-| Windows `v0.1.1` preview | VB-CABLE prerequisite; not production-supported |
+| Windows `v0.1.2` preview | VB-CABLE prerequisite; not production-supported |
 
 Security fixes normally target the current development tree. Backports are not promised.
 

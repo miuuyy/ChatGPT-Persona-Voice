@@ -16,7 +16,7 @@ production release.
 | Converted output | Native Core Audio helper | Native WASAPI shared-render helper | Native PipeWire output helper |
 | Engine profile | `darwin-arm64-mps` | `windows-x64-cuda130` | `linux-x64-cuda130` |
 | Engine installation | Source and packaged in-app installer implemented | Source and packaged in-app installer implemented | Source and packaged in-app installer implemented |
-| Live relay evidence | Manually accepted live | User-mode build/contract proof; awaiting v0.1.1 physical-host reports | Ubuntu 24.04 / WirePlumber 0.4 and Fedora 42 / PipeWire 1.4.11 / WirePlumber 0.5.14 accepted live |
+| Live relay evidence | Manually accepted live | User-mode build/contract proof; awaiting v0.1.2 physical-host reports | Ubuntu 24.04 / WirePlumber 0.4 and Fedora 42 / PipeWire 1.4.11 / WirePlumber 0.5.14 accepted live |
 | Remaining platform qualification | Signing/notarization, clean-machine and recovery matrix | Clean VB-CABLE install, Volume Mixer assignment/restore, CUDA, and recovery matrix | Clean packaged policy recovery and broader distribution/session coverage |
 | Supported release | No | No | No |
 
@@ -118,8 +118,9 @@ compilation, and non-permissioned native self-tests on macOS, Windows, and Linux
 inside a private PipeWire session. These checks prove build/protocol contracts, not permissioned
 live routing, CUDA performance, clean installation, or release support.
 
-The `v0.1.1` tag workflow builds target-native DMG/ZIP, NSIS, and AppImage artifacts and signs a
-canonical update manifest. Windows native components compile and run contract self-tests in CI;
+The `v0.1.2` tag workflow builds target-native DMG/ZIP, NSIS, and AppImage artifacts and signs a
+canonical update manifest. Windows native components compile and run contract self-tests in CI, and
+the generated NSIS package must install and mount its packaged renderer in a clean temporary profile;
 VB-CABLE itself is not a release asset. Transport, checksums, or a published artifact do not replace
 the platform gates above.
 

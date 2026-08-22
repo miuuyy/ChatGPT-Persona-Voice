@@ -11,6 +11,7 @@ const preload = fs.readFileSync(path.join(root, "electron", "preload.cjs"), "utf
 const index = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const viteConfig = fs.readFileSync(path.join(root, "vite.config.ts"), "utf8");
 const updater = fs.readFileSync(path.join(root, "electron", "update.cjs"), "utf8");
+const rendererProtocol = fs.readFileSync(path.join(root, "electron", "renderer-protocol.cjs"), "utf8");
 
 test("packaged renderer, updater, preload, and quit lifecycle expose no ambient authority", () => {
   assert.match(main, /contextIsolation:\s*true/);
@@ -23,6 +24,16 @@ test("packaged renderer, updater, preload, and quit lifecycle expose no ambient 
   assert.match(main, /devServerUrl = !app\.isPackaged && requestedDevServerUrl === EXPECTED_DEV_SERVER_URL/);
   assert.match(main, /EXPECTED_DEV_SERVER_URL = "http:\/\/127\.0\.0\.1:4178"/);
   assert.match(main, /WINDOWS_VB_CABLE_URL = "https:\/\/vb-audio\.com\/Cable\/"/);
+  assert.match(main, /registerRendererScheme\(protocol\)/);
+  assert.match(main, /installRendererProtocol\(\{/);
+  assert.match(main, /mainWindow\.loadURL\(PACKAGED_RENDERER_URL\)/);
+  assert.doesNotMatch(main, /mainWindow\.loadFile\(/);
+  assert.match(rendererProtocol, /PACKAGED_RENDERER_URL = `\$\{RENDERER_SCHEME\}:\/\/\$\{RENDERER_HOST\}\/index\.html`/);
+  assert.match(rendererProtocol, /standard:\s*true/);
+  assert.match(rendererProtocol, /secure:\s*true/);
+  assert.doesNotMatch(rendererProtocol, /bypassCSP:\s*true/);
+  assert.match(rendererProtocol, /path\.relative\(rendererRoot, assetPath\)/);
+  assert.match(rendererProtocol, /relativePath\.startsWith\("\.\."\)/);
   assert.match(main, /voice:platform-audio-setup-open-download/);
   assert.match(preload, /openWindowsAudioSetupDownload/);
   assert.doesNotMatch(main, /const isDev = Boolean\(process\.env\.VITE_DEV_SERVER_URL\)/);
