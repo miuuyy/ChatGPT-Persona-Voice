@@ -100,6 +100,7 @@ function probeNativeHelper(executable, expectedHelper, {
       else resolve(value);
     };
     const parser = new NativeFrameParser((candidate) => {
+      if (settled) return;
       if (candidate.type === "error") {
         finish(new Error(candidate.message || `${expectedHelper} native self-test failed`));
       } else if (candidate.type === "ready") {
@@ -107,12 +108,16 @@ function probeNativeHelper(executable, expectedHelper, {
       }
     });
     child.stdout.on("data", (chunk) => {
+      if (settled) return;
       try { parser.push(chunk); }
       catch (error) { finish(error); }
     });
-    child.stderr.on("data", (chunk) => { stderr += chunk.toString("utf8"); });
+    child.stderr.on("data", (chunk) => {
+      if (!settled) stderr += chunk.toString("utf8");
+    });
     child.once("error", (error) => finish(error));
-    child.once("exit", (code, signal) => {
+    child.once("close", (code, signal) => {
+      if (settled) return;
       try { parser.finish(); }
       catch (error) { finish(error); return; }
       if (code !== 0 || !message || message.helper !== expectedHelper || message.protocolVersion !== 1) {
@@ -124,7 +129,6 @@ function probeNativeHelper(executable, expectedHelper, {
       finish(null, message);
     });
     timer = setTimeout(() => {
-      child.kill("SIGKILL");
       finish(new Error(`${expectedHelper} native self-test timed out`));
     }, timeoutMs);
     timer.unref?.();

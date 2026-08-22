@@ -34,12 +34,32 @@ namespace cpv::windows {
 using Microsoft::WRL::ComPtr;
 
 // These values come from VB-Audio's signed VBCABLE_Driver_Pack45 INF. Unlike
-// PKEY_Device_FriendlyName, users cannot rename the endpoint description or
-// adapter interface name from the Windows Sound control panel.
+// PKEY_Device_FriendlyName, users cannot rename the driver description or
+// matching device ID from the Windows Sound control panel.
 inline constexpr wchar_t kVbCableInputDeviceDescription[] = L"CABLE Input";
-inline constexpr wchar_t kVbCableInterfaceFriendlyName[] = L"VB-Audio Point";
+inline constexpr wchar_t kVbCableMatchingDeviceId[] = L"VBAudioVACWDM";
 inline constexpr wchar_t kVbCableInputDisplayName[] = L"CABLE Input (VB-Audio Virtual Cable)";
 inline constexpr char kVbCableInputIdentity[] = "vb-audio-vb-cable-input-v1";
+
+struct VbCableDeviceIdentity {
+  std::wstring description;
+  std::wstring matchingDeviceId;
+};
+
+inline bool equalOrdinalIgnoreCase(std::wstring_view left, std::wstring_view right) {
+  if (left.size() != right.size() ||
+      left.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+    return false;
+  }
+  return CompareStringOrdinal(
+      left.data(), static_cast<int>(left.size()),
+      right.data(), static_cast<int>(right.size()), TRUE) == CSTR_EQUAL;
+}
+
+inline bool matchesVbCableInputIdentity(const VbCableDeviceIdentity& identity) {
+  return equalOrdinalIgnoreCase(identity.description, kVbCableInputDeviceDescription) &&
+      equalOrdinalIgnoreCase(identity.matchingDeviceId, kVbCableMatchingDeviceId);
+}
 
 inline bool setBinaryStandardStreams(bool includeInput) {
   if (_setmode(_fileno(stdout), _O_BINARY) == -1) return false;
@@ -173,13 +193,12 @@ inline HRESULT deviceStringProperty(IMMDevice* device, const PROPERTYKEY& key,
 }
 
 inline bool isVbCableInput(IMMDevice* device) {
-  std::wstring description;
-  std::wstring interfaceName;
-  return SUCCEEDED(deviceStringProperty(device, PKEY_Device_DeviceDesc, &description)) &&
+  VbCableDeviceIdentity identity;
+  return SUCCEEDED(deviceStringProperty(
+             device, PKEY_Device_DeviceDesc, &identity.description)) &&
       SUCCEEDED(deviceStringProperty(
-          device, PKEY_DeviceInterface_FriendlyName, &interfaceName)) &&
-      description == kVbCableInputDeviceDescription &&
-      interfaceName == kVbCableInterfaceFriendlyName;
+          device, PKEY_Device_MatchingDeviceId, &identity.matchingDeviceId)) &&
+      matchesVbCableInputIdentity(identity);
 }
 
 inline bool parseUnsigned(std::string_view value, std::uint32_t minimum,
