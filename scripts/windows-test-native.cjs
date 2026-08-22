@@ -6,6 +6,25 @@ const { NativeFrameParser } = require("../electron/native-protocol.cjs");
 
 const PROJECT_ROOT = path.join(__dirname, "..");
 
+function testAudioCommonIdentity() {
+  const executable = path.join(
+    PROJECT_ROOT,
+    "native", "windows", "build", process.arch, "Release",
+    "cpv-windows-audio-common-test.exe",
+  );
+  const result = spawnSync(executable, [], {
+    cwd: PROJECT_ROOT,
+    encoding: "utf8",
+    timeout: 10_000,
+    windowsHide: true,
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(result.stderr?.trim() || result.stdout?.trim() ||
+      `Windows audio identity test exited with ${String(result.status)}`);
+  }
+}
+
 function selfTest(name, expectedHelper) {
   const executable = path.join(PROJECT_ROOT, "native", "bin", "win32", name);
   const result = spawnSync(executable, ["--self-test"], {
@@ -32,6 +51,7 @@ function selfTest(name, expectedHelper) {
 
 function testWindowsNative({ platform = process.platform, requireAudioDevice = false } = {}) {
   if (platform !== "win32") throw new Error("Windows native helpers must be tested on Windows");
+  testAudioCommonIdentity();
   const capture = selfTest("cpv-audio-capture.exe", "capture");
   if (capture.backend !== "wasapi-process-loopback" ||
       capture.minimumWindowsBuild !== 20_348 ||
@@ -67,4 +87,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { selfTest, testWindowsNative };
+module.exports = { selfTest, testAudioCommonIdentity, testWindowsNative };
