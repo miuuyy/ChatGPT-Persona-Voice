@@ -250,6 +250,51 @@ test("Windows route exposes PCM only while every live target session is isolated
   await guard.close();
 });
 
+test("Windows route starts a new sequence domain when capture ownership changes", async () => {
+  const value = fixture();
+  const { guard } = await acquireFixture(value, "engaged");
+  const pcm = Buffer.alloc(64 * 2 * 4, 5);
+  const emitAudio = (sequence) => value.captureChild.stdout.emit("data", encodeAudioFrame({
+    sequence,
+    sampleRate: 48_000,
+    channels: 2,
+    samplesPerChannel: 64,
+    pcm,
+  }));
+
+  const firstFrames = [];
+  const firstErrors = [];
+  const firstStream = value.route.open(
+    settings,
+    (frame) => firstFrames.push(frame),
+    (error) => firstErrors.push(error),
+  );
+  emitAudio(9);
+  assert.deepEqual(firstFrames.map((frame) => frame.sequence), [9]);
+  assert.deepEqual(firstErrors, []);
+  await firstStream.close();
+
+  emitAudio(10);
+  emitAudio(11);
+
+  const secondFrames = [];
+  const secondErrors = [];
+  const secondStream = value.route.open(
+    settings,
+    (frame) => secondFrames.push(frame),
+    (error) => secondErrors.push(error),
+  );
+  emitAudio(12);
+  assert.deepEqual(secondErrors.map((error) => error.message), []);
+  assert.deepEqual(secondFrames.map((frame) => frame.sequence), [12]);
+
+  emitAudio(14);
+  assert.equal(secondErrors.length, 1);
+  assert.match(secondErrors[0].message, /expected 13, received 14/);
+  await secondStream.close();
+  await guard.close();
+});
+
 test("Windows route faults explicitly when a target session appears off-sink", async () => {
   const value = fixture();
   const { guard, routeErrors } = await acquireFixture(value, "engaged");
