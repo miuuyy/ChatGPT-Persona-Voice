@@ -25,7 +25,7 @@ int main() {
 
   failures += expect(
       cpv::windows::matchesVbCableInputIdentity(pack45Identity()),
-      "Pack45 identity must remain valid when the legacy interface friendly name is absent");
+      "Pack45 identity must not depend on the legacy KS interface friendly name");
 
   auto sixteenChannel = pack45Identity();
   sixteenChannel.description = L"CABLE In 16ch";
