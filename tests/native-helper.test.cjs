@@ -4,7 +4,12 @@ const assert = require("node:assert/strict");
 const { EventEmitter } = require("node:events");
 const path = require("node:path");
 const test = require("node:test");
-const { probeNativeHelper, resolveNativeHelperPath } = require("../electron/native-helper.cjs");
+const {
+  probeNativeHelper,
+  resolveNativeHelperPath,
+  terminateChild,
+  waitForExit,
+} = require("../electron/native-helper.cjs");
 const { encodeFrame } = require("../electron/native-protocol.cjs");
 
 function fakeChild() {
@@ -92,6 +97,110 @@ test("native helper probe kills a malformed self-test process", async () => {
   assert.deepEqual(child.kills, ["SIGKILL"]);
 });
 
+test("native helper exit and termination helpers preserve process-exit proof", async () => {
+  const exiting = fakeChild();
+  const waiting = waitForExit(exiting, 100);
+  exiting.exitCode = 0;
+  exiting.emit("exit", 0, null);
+  assert.deepEqual(await waiting, { code: 0, signal: null });
+
+  const terminating = fakeChild();
+  await terminateChild(terminating, 100);
+  assert.deepEqual(terminating.kills, ["SIGTERM"]);
+
+  await terminateChild(null, 100);
+  await terminateChild(exiting, 100);
+});
+
+test("native helper exit waiting rejects process errors and bounded timeouts", async () => {
+  const errored = fakeChild();
+  const erroredWait = waitForExit(errored, 100);
+  errored.emit("error", new Error("spawn failed"));
+  await assert.rejects(() => erroredWait, /spawn failed/);
+
+  const stalled = fakeChild();
+  await assert.rejects(() => waitForExit(stalled, 10), /did not exit within 10 ms/);
+});
+
+test("native helper termination escalates after a bounded graceful timeout", async () => {
+  const child = fakeChild();
+  child.kill = (signal) => {
+    child.kills.push(signal);
+    if (signal === "SIGKILL") {
+      child.signalCode = signal;
+      queueMicrotask(() => child.emit("exit", null, signal));
+    }
+    return true;
+  };
+  await terminateChild(child, 10);
+  assert.deepEqual(child.kills, ["SIGTERM", "SIGKILL"]);
+});
+
+test("native helper probe preserves a framed native error", async () => {
+  const child = fakeChild();
+  const probing = probeNativeHelper("/helper", "route", {
+    spawnProcess: () => child,
+    timeoutMs: 100,
+  });
+  child.stdout.emit("data", encodeFrame("error", Buffer.from(JSON.stringify({
+    type: "error",
+    helper: "route",
+    message: "VB-CABLE identity could not be proven",
+  }))));
+  await assert.rejects(() => probing, /identity could not be proven/);
+  assert.deepEqual(child.kills, ["SIGKILL"]);
+});
+
+test("native helper probe supplies a fallback for an empty native error", async () => {
+  const child = fakeChild();
+  const probing = probeNativeHelper("/helper", "route", {
+    spawnProcess: () => child,
+    timeoutMs: 100,
+  });
+  child.stdout.emit("data", encodeFrame("error", Buffer.from(JSON.stringify({
+    type: "error",
+    helper: "route",
+  }))));
+  await assert.rejects(() => probing, /route native self-test failed/);
+});
+
+test("native helper probe reports drained stderr when readiness is missing", async () => {
+  const child = fakeChild();
+  const probing = probeNativeHelper("/helper", "route", {
+    spawnProcess: () => child,
+    timeoutMs: 100,
+  });
+  child.stderr.emit("data", Buffer.from("driver self-test detail"));
+  child.exitCode = 0;
+  child.stdout.emit("end");
+  child.emit("close", 0, null);
+  await assert.rejects(() => probing, /driver self-test detail/);
+  assert.deepEqual(child.kills, []);
+});
+
+test("native helper probe reports the final exit code when no frame is emitted", async () => {
+  const child = fakeChild();
+  const probing = probeNativeHelper("/helper", "route", {
+    spawnProcess: () => child,
+    timeoutMs: 100,
+  });
+  child.exitCode = 3;
+  child.stdout.emit("end");
+  child.emit("close", 3, null);
+  await assert.rejects(() => probing, /code=3, signal=null/);
+  assert.deepEqual(child.kills, []);
+});
+
+test("native helper probe times out once and kills the live child", async () => {
+  const child = fakeChild();
+  const probing = probeNativeHelper("/helper", "route", {
+    spawnProcess: () => child,
+    timeoutMs: 10,
+  });
+  await assert.rejects(() => probing, /timed out/);
+  assert.deepEqual(child.kills, ["SIGKILL"]);
+});
+
 test("native helper paths distinguish development and packaged layouts", () => {
   assert.equal(resolveNativeHelperPath("capture", {
     platform: "darwin",
@@ -116,4 +225,5 @@ test("native helper paths distinguish development and packaged layouts", () => {
     resourcesPath: "C:\\Program Files\\Persona Voice\\resources",
   }), path.join("C:\\Program Files\\Persona Voice\\resources", "native", "win32", "cpv-audio-route.exe"));
   assert.equal(resolveNativeHelperPath("capture", { platform: "freebsd" }), null);
+  assert.throws(() => resolveNativeHelperPath("unknown"), /Unknown native helper kind/);
 });
