@@ -1,6 +1,7 @@
 "use strict";
 
 const assert = require("node:assert/strict");
+const { spawnSync } = require("node:child_process");
 const crypto = require("node:crypto");
 const fs = require("node:fs");
 const os = require("node:os");
@@ -9,9 +10,12 @@ const test = require("node:test");
 const {
   EngineInstaller,
   MIN_INSTALL_FREE_BYTES,
+  UV_VERSION,
   buildInstallerEnvironment,
+  executeCommand,
   resolveEngineInstallerPaths,
   resolveEngineStoragePaths,
+  resolveUvBuildConstraintArgument,
 } = require("../electron/engine-installer.cjs");
 const {
   pythonPathForRuntime,
@@ -25,7 +29,7 @@ function fixture(t, {
 } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "cpv-engine-installer-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
-  const resources = path.join(root, "resources");
+  const resources = path.join(root, "Codex Persona Voice.app", "Contents", "Resources");
   const runtimeRoot = path.join(root, "engine", "seed-vc");
   const stagingRoot = `${runtimeRoot}.installing`;
   const profile = resolveSeedVcRuntimeProfile(platform, arch);
@@ -132,12 +136,81 @@ test("engine package installs in staging and publishes only after verification",
     "argbind",
     "randomname",
   ]);
-  assert.equal(
-    packageCommand.args.at(packageCommand.args.indexOf("--build-constraint") + 1),
-    value.paths.requirementsPath,
-  );
+  const buildConstraint = packageCommand.args.at(packageCommand.args.indexOf("--build-constraint") + 1);
+  assert.equal(buildConstraint, path.relative(value.paths.seedRoot, value.paths.requirementsPath));
+  assert.equal(path.isAbsolute(buildConstraint), false);
+  assert.equal(/\s/u.test(buildConstraint), false);
+  assert.equal(path.resolve(packageCommand.cwd, buildConstraint), value.paths.requirementsPath);
   assert.equal(packageCommand.args.at(packageCommand.args.indexOf("--default-index") + 1), "https://pypi.org/simple");
   assert.equal(value.commands.some((command) => command.args.includes(value.paths.verifierPath)), true);
+});
+
+test("pinned uv accepts the packaged macOS build constraint path with spaces", {
+  skip: process.platform !== "darwin" || process.arch !== "arm64",
+}, async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "cpv-uv-packaged-path-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const resourcesPath = path.join(root, "Codex Persona Voice.app", "Contents", "Resources");
+  const runtimeRoot = path.join(root, "Library", "Application Support", "Codex Persona Voice", "engine", "seed-vc");
+  const sourcePaths = resolveEngineInstallerPaths({
+    isPackaged: false,
+    projectRoot: path.join(__dirname, ".."),
+    runtimeRoot,
+    platform: "darwin",
+    arch: "arm64",
+  });
+  assert.ok(sourcePaths.uvPath, `uv ${UV_VERSION} must be available on PATH`);
+  const version = spawnSync(sourcePaths.uvPath, ["--version"], { encoding: "utf8", shell: false });
+  assert.equal(version.status, 0, version.stderr);
+  assert.equal(version.stdout.trim().split(/\s+/)[1], UV_VERSION);
+
+  const packagedPaths = resolveEngineInstallerPaths({
+    isPackaged: true,
+    resourcesPath,
+    runtimeRoot,
+    platform: "darwin",
+    arch: "arm64",
+  });
+  for (const directory of [
+    path.dirname(packagedPaths.uvPath),
+    path.dirname(packagedPaths.requirementsPath),
+    packagedPaths.seedRoot,
+    packagedPaths.cacheRoot,
+    packagedPaths.pythonRoot,
+    packagedPaths.tempRoot,
+  ]) fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
+  fs.copyFileSync(sourcePaths.uvPath, packagedPaths.uvPath);
+  fs.chmodSync(packagedPaths.uvPath, 0o755);
+  fs.writeFileSync(packagedPaths.requirementsPath, "", { mode: 0o600 });
+
+  const buildConstraint = resolveUvBuildConstraintArgument(
+    packagedPaths.requirementsPath,
+    packagedPaths.seedRoot,
+  );
+  await executeCommand({
+    executable: packagedPaths.uvPath,
+    args: [
+      "pip", "sync", "--dry-run", "--system", "--allow-empty-requirements",
+      "--build-constraint", buildConstraint,
+      packagedPaths.requirementsPath,
+    ],
+    cwd: packagedPaths.seedRoot,
+    environment: {
+      ...buildInstallerEnvironment(packagedPaths, {}, "darwin"),
+      UV_OFFLINE: "1",
+    },
+    platform: "darwin",
+  });
+});
+
+test("uv build constraints fail closed when the relative path still contains whitespace", () => {
+  assert.throws(
+    () => resolveUvBuildConstraintArgument(
+      "/private/resources/engine/locks with spaces/requirements.lock.txt",
+      "/private/resources/engine/vendor/seed-vc",
+    ),
+    /non-whitespace relative path/,
+  );
 });
 
 test("Linux x64 installs the locked CUDA profile without a CPU fallback", async (t) => {
