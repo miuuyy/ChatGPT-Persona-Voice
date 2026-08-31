@@ -266,6 +266,14 @@ function throwIfCancelled(signal) {
   if (signal?.aborted) throw cancelledError();
 }
 
+function resolveUvBuildConstraintArgument(requirementsPath, cwd) {
+  const argument = path.relative(cwd, requirementsPath);
+  if (!argument || path.isAbsolute(argument) || /\s/u.test(argument)) {
+    throw new Error("The uv build-constraint path must be a non-whitespace relative path");
+  }
+  return argument;
+}
+
 function executeCommand({
   executable,
   args,
@@ -572,13 +580,17 @@ class EngineInstaller {
       ], signal, "python");
       throwIfCancelled(signal);
       this.phase("packages");
+      const buildConstraint = resolveUvBuildConstraintArgument(
+        this.paths.requirementsPath,
+        this.paths.seedRoot,
+      );
       const packageArgs = [
         "pip", "sync", "--managed-python", "--strict", "--require-hashes",
         "--only-binary", ":all:",
         "--no-binary", "antlr4-python3-runtime",
         "--no-binary", "argbind",
         "--no-binary", "randomname",
-        "--build-constraint", this.paths.requirementsPath,
+        "--build-constraint", buildConstraint,
         "--link-mode", "copy",
         "--default-index", "https://pypi.org/simple",
       ];
@@ -756,6 +768,7 @@ module.exports = {
   executeCommand,
   resolveEngineInstallerPaths,
   resolveEngineStoragePaths,
+  resolveUvBuildConstraintArgument,
   runtimePaths,
   throwIfCancelled,
 };

@@ -3,7 +3,10 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
-const { buildInstallerEnvironment } = require("../electron/engine-installer.cjs");
+const {
+  buildInstallerEnvironment,
+  resolveUvBuildConstraintArgument,
+} = require("../electron/engine-installer.cjs");
 const {
   pythonPathForRuntime,
   resolveSeedVcRuntimeProfile,
@@ -102,7 +105,7 @@ const packageArgs = [
   "--no-binary", "antlr4-python3-runtime",
   "--no-binary", "argbind",
   "--no-binary", "randomname",
-  "--build-constraint", requirementsPath,
+  "--build-constraint", resolveUvBuildConstraintArgument(requirementsPath, root),
   "--link-mode", "copy",
   "--default-index", "https://pypi.org/simple",
 ];
