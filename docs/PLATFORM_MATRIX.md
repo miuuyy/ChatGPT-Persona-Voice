@@ -118,7 +118,7 @@ compilation, and non-permissioned native self-tests on macOS, Windows, and Linux
 inside a private PipeWire session. These checks prove build/protocol contracts, not permissioned
 live routing, CUDA performance, clean installation, or release support.
 
-The `v0.1.4` tag workflow builds target-native DMG/ZIP, NSIS, and AppImage artifacts and signs a
+The `v0.1.5` tag workflow builds target-native DMG/ZIP, NSIS, and AppImage artifacts and signs a
 canonical update manifest. Windows native components compile and run contract self-tests in CI, and
 the generated NSIS package must install and mount its packaged renderer in a clean temporary profile;
 VB-CABLE itself is not a release asset. Transport, checksums, or a published artifact do not replace
