@@ -29,7 +29,7 @@ function fixture(t, overrides = {}) {
         fs.mkdirSync(path.dirname(staged.pythonPath), { recursive: true });
         fs.writeFileSync(staged.pythonPath, "test python");
       }
-      if (command.executable.endsWith("/python")) {
+      if (path.basename(command.executable).toLowerCase() === "python") {
         const staged = resolveChatterboxPaths({ projectRoot: root, runtimeRoot: installer.stagingRoot });
         fs.mkdirSync(staged.weightsPath, { recursive: true });
         fs.writeFileSync(path.join(staged.weightsPath, "s3gen.safetensors"), "mock verified model");

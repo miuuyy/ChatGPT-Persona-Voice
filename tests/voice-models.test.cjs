@@ -79,9 +79,11 @@ test("existing settings retain the original model; packaged worker assets resolv
   delete state.settings.selectedModelId;
   fs.writeFileSync(file, JSON.stringify(state));
   assert.equal(createStateStore(file, { initialModelId: "chatterbox" }).read().settings.selectedModelId, "seed-vc");
-  const paths = resolveChatterboxPaths({ isPackaged: true, resourcesPath: "/Applications/Persona Voice.app/Contents/Resources", runtimeRoot: "/private/test/runtime/chatterbox" });
-  assert.equal(paths.workerPath, "/Applications/Persona Voice.app/Contents/Resources/engine/chatterbox/worker.py");
-  assert.equal(paths.pythonPath, "/private/test/runtime/chatterbox/.venv/bin/python");
+  const resourcesPath = path.normalize("/Applications/Persona Voice.app/Contents/Resources");
+  const runtimeRoot = path.normalize("/private/test/runtime/chatterbox");
+  const paths = resolveChatterboxPaths({ isPackaged: true, resourcesPath, runtimeRoot });
+  assert.equal(paths.workerPath, path.normalize("/Applications/Persona Voice.app/Contents/Resources/engine/chatterbox/worker.py"));
+  assert.equal(paths.pythonPath, path.normalize("/private/test/runtime/chatterbox/.venv/bin/python"));
 });
 
 test("fresh Apple Silicon installs recommend Chatterbox without overwriting an existing selection", (t) => {
