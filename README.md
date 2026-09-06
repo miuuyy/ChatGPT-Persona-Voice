@@ -19,6 +19,10 @@
 </p>
 
 <p align="center">
+  <img src="assets/persona-voice-screenshot.png" alt="ChatGPT voice chat alongside Persona Voice with Sayo active" width="1200">
+</p>
+
+<p align="center">
   <img src="assets/architecture-models.svg" alt="ChatGPT and Codex audio routed through the selected local voice model" width="1200">
 </p>
 
@@ -26,7 +30,7 @@ Persona Voice replaces the spoken output of ChatGPT and Codex with a voice you c
 conversation and controls remain in the source app, while conversion runs locally on your device.
 Output quality and timing vary with the hardware, source audio, and selected reference.
 
-## Voice models (unreleased)
+## Voice models
 
 Download one model during first-run setup, then add the other later in **Settings → Voice model**.
 Existing installations keep their current model; new Apple Silicon installs recommend Chatterbox.

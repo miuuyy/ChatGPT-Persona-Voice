@@ -1,6 +1,7 @@
 # Voice models
 
-This checkout includes two built-in audio-to-audio models. These changes have not been released.
+The v0.1.6 preview release includes two built-in audio-to-audio models. Chatterbox runs on Apple
+Silicon while Seed-VC remains available on existing installations.
 Both consume incoming speech continuously and preserve the selected source and target voice.
 Changing the interface language does not change the conversion model.
 

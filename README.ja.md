@@ -19,6 +19,10 @@
 </p>
 
 <p align="center">
+  <img src="assets/persona-voice-screenshot.png" alt="Sayo が有効な ChatGPT の音声チャットと Persona Voice" width="1200">
+</p>
+
+<p align="center">
   <img src="assets/architecture-models.svg" alt="選択したローカル音声モデルで ChatGPT と Codex の声を変換" width="1200">
 </p>
 
@@ -26,7 +30,7 @@ Persona Voice は、ChatGPT と Codex の読み上げ音声を選んだ声に置
 アプリです。会話と操作は元のアプリに残り、音声変換はこのデバイス上で実行されます。
 品質とタイミングは、ハードウェア、入力音声、選択した参照音声によって変わります。
 
-## 音声モデル（未リリース）
+## 音声モデル
 
 初回設定ではモデルを1つダウンロードします。もう一方は後から **設定 → 音声モデル** で
 追加できます。既存の選択は保持され、新しい Apple Silicon 環境では Chatterbox を推奨します。

@@ -19,14 +19,18 @@
 </p>
 
 <p align="center">
-  <img src="assets/architecture-models.svg" alt="ChatGPT 音频经过本地 Seed-VC 层后输出到扬声器" width="1200">
+  <img src="assets/persona-voice-screenshot.png" alt="启用 Sayo 的 ChatGPT 语音聊天与 Persona Voice" width="1200">
+</p>
+
+<p align="center">
+  <img src="assets/architecture-models.svg" alt="ChatGPT 和 Codex 音频通过所选本地语音模型路由到扬声器" width="1200">
 </p>
 
 Persona Voice 是一款桌面应用，可将 ChatGPT 和 Codex 的语音输出替换为你选择的声音。
 对话和控制仍保留在原应用中，语音转换则在本设备上运行。输出质量与时序会因硬件、
 输入音频和所选参考而异。
 
-## 语音模型（尚未发布）
+## 语音模型
 
 首次设置只需下载一个模型，之后可在 **设置 → 语音模型** 中安装另一个。
 现有安装保留原来的选择；全新 Apple Silicon 安装默认推荐 Chatterbox。
