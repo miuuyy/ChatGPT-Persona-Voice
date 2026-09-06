@@ -18,7 +18,17 @@ class MacAudioOutput {
     waitForChildExit = waitForExit,
     logger = null,
     clock = () => Date.now(),
+    startupPrebufferMs = 500,
+    startupDelayMs = 0,
   }) {
+    if (!Number.isInteger(startupPrebufferMs) || startupPrebufferMs < 200 || startupPrebufferMs > 1000 || startupPrebufferMs % 20) {
+      throw new Error("Core Audio prebuffer must be a multiple of 20 ms between 200 and 1000 ms");
+    }
+    this.startupPrebufferMs = startupPrebufferMs;
+    if (!Number.isInteger(startupDelayMs) || startupDelayMs < 0 || startupDelayMs > 500) {
+      throw new Error("Core Audio startup delay must be between 0 and 500 ms");
+    }
+    this.startupDelayMs = startupDelayMs;
     this.helperPath = helperPath;
     this.platform = platform;
     this.exists = exists;
@@ -50,12 +60,13 @@ class MacAudioOutput {
     const probe = (async () => {
       try {
         const result = await this.probeHelper(this.helperPath, "output", {
-          args: deviceUid
-            ? ["--self-test", "--device-uid", deviceUid]
-            : ["--self-test"],
+          args: ["--self-test", ...(this.startupPrebufferMs === 500 ? [] : ["--startup-prebuffer-ms", String(this.startupPrebufferMs)]),
+                 ...(this.startupDelayMs === 0 ? [] : ["--startup-delay-ms", String(this.startupDelayMs)]),
+                 ...(deviceUid ? ["--device-uid", deviceUid] : [])],
         });
         if (result.supportsJitterBuffer !== true || result.startsWhenQueueFull !== true ||
-            result.startupPrebufferMs !== 500 || result.queueCapacityFrames < 45 ||
+            result.startupPrebufferMs !== this.startupPrebufferMs || result.queueCapacityFrames < Math.max(45, Math.ceil(this.startupPrebufferMs / 20)) ||
+            result.startupDelayMs !== this.startupDelayMs ||
             typeof result.deviceUid !== "string" || !result.deviceUid ||
             typeof result.deviceName !== "string" || !result.deviceName ||
             !Array.isArray(result.memberDeviceUids) ||
@@ -110,6 +121,8 @@ class MacAudioOutput {
     const childArguments = [
       "--sample-rate", String(format.sampleRate),
       "--channels", String(format.channels),
+      ...(this.startupPrebufferMs === 500 ? [] : ["--startup-prebuffer-ms", String(this.startupPrebufferMs)]),
+      ...(this.startupDelayMs === 0 ? [] : ["--startup-delay-ms", String(this.startupDelayMs)]),
       ...(deviceUid ? ["--device-uid", deviceUid] : []),
     ];
     const child = this.spawnProcess(this.helperPath, childArguments, {
@@ -214,8 +227,9 @@ class MacAudioOutput {
               message.sampleRate !== format.sampleRate ||
               message.channels !== format.channels || message.sampleFormat !== "f32le" ||
               message.supportsJitterBuffer !== true || message.startsWhenQueueFull !== true ||
-              message.startupPrebufferMs !== 500 ||
-              message.queueCapacityFrames < 45 ||
+              message.startupPrebufferMs !== this.startupPrebufferMs ||
+              message.startupDelayMs !== this.startupDelayMs ||
+              message.queueCapacityFrames < Math.max(45, Math.ceil(this.startupPrebufferMs / 20)) ||
               typeof message.deviceUid !== "string" || !message.deviceUid ||
               typeof message.deviceName !== "string" || !message.deviceName ||
               !Array.isArray(message.memberDeviceUids) ||

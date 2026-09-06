@@ -32,7 +32,8 @@ The Apple Silicon path includes:
   a 64-slot capture ring, dynamic process-tree refresh, and restoration reporting;
 - exact-format Core Audio output with 64 bounded buffers, a 40 ms maximum frame, and explicit
   rebuffer status;
-- the pinned Apple MPS Seed-VC profile and verified source/in-app engine installation;
+- the pinned Apple MPS Seed-VC profile and Apple Silicon MLX Chatterbox profile, with separate
+  verified source/in-app installations and explicit model selection;
 - a manually accepted live relay path.
 
 This does not complete Developer ID signing, notarization, clean-machine permission recovery,
@@ -126,3 +127,7 @@ the platform gates above.
 
 See [Release engineering](RELEASE.md) for artifact policy and [Roadmap](ROADMAP.md) for the remaining
 evidence sequence.
+
+Chatterbox is currently available only on Apple Silicon macOS. Its accepted English live test
+and host-specific processing comparison are described in [Voice models](VOICE_MODELS.md).
+Windows/Linux continue to use Seed-VC; no Chatterbox CUDA or CPU qualification is implied.

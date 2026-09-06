@@ -13,7 +13,14 @@
   "bugs": {
     "url": "https://github.com/miuuyy/ChatGPT-Persona-Voice/issues"
   },
-  "keywords": ["voice-conversion", "seed-vc", "electron", "chatgpt", "codex"],
+  "keywords": [
+    "voice-conversion",
+    "seed-vc",
+    "chatterbox",
+    "electron",
+    "chatgpt",
+    "codex"
+  ],
   "packageManager": "bun@1.3.14",
   "engineInstaller": {
     "uvVersion": "0.11.14"
@@ -41,7 +48,10 @@
     "package:mac": "bun run build:native && bun run test:native && bun run build && bun run scripts/package.cjs --mac",
     "package:win": "bun run build:native && bun run test:native && bun run build && bun run scripts/package.cjs --win",
     "package:linux": "bun run build:native && bun run test:native && bun run build && bun run scripts/package.cjs --linux",
-    "start": "electron ."
+    "start": "electron .",
+    "setup:chatterbox": "node scripts/setup-chatterbox.cjs",
+    "test:ui:mac": "electron scripts/test-model-ui.cjs",
+    "test:chatterbox": "python3 scripts/test-chatterbox.py"
   },
   "dependencies": {
     "react": "^19.0.0",
@@ -92,7 +102,10 @@
       {
         "from": "engine/seed-vc",
         "to": "engine/seed-vc",
-        "filter": ["**/*", "!__pycache__/**"]
+        "filter": [
+          "**/*",
+          "!__pycache__/**"
+        ]
       },
       {
         "from": "engine/vendor/seed-vc",
@@ -106,6 +119,15 @@
           "!.venv/**",
           "!examples/**",
           "!campplus_cn_common.bin"
+        ]
+      },
+      {
+        "from": "engine/chatterbox",
+        "to": "engine/chatterbox",
+        "filter": [
+          "**/*",
+          "!**/__pycache__/**",
+          "!**/*.pyc"
         ]
       }
     ],
@@ -124,7 +146,10 @@
       "extendInfo": {
         "NSAudioCaptureUsageDescription": "Codex Persona Voice captures output from the application you select so it can convert the voice locally before playback."
       },
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "extraResources": [
         {
           "from": "node_modules/electron/dist/LICENSE",
@@ -150,7 +175,9 @@
     },
     "win": {
       "icon": "assets/icon.png",
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "extraResources": [
         {
           "from": "native/bin/win32/cpv-audio-capture.exe",
@@ -169,7 +196,9 @@
     "linux": {
       "category": "AudioVideo",
       "icon": "assets/icon.png",
-      "target": ["AppImage"],
+      "target": [
+        "AppImage"
+      ],
       "extraResources": [
         {
           "from": "native/bin/linux/cpv-audio-capture",

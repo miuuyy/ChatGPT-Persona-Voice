@@ -56,8 +56,8 @@
     "socialPrivacy": "Persona Voice は各ページを開いたことだけを確認し、GitHub や X のアカウント情報を読み取りません。",
     "supportOptional": "プロジェクトの応援は任意です。",
     "engineKicker": "ローカル音声エンジン",
-    "engineTitle": "声を変換するエンジンをインストールします。",
-    "engineBody": "ランチャー本体を小さく保つため、Seed-VC、管理対象 Python、固定済みの 7 個のモデルファイルを非公開のアプリデータへ別途インストールします。",
+    "engineTitle": "最初の音声モデルを選びましょう。",
+    "engineBody": "モデルを1つダウンロードすると始められます。もう一方は後から「設定 → 音声モデル」で追加できます。",
     "installedLocally": "ローカルに {size} インストール済み",
     "installSize": "インストール容量 約 {installed} · 必要な空き容量 {free}",
     "installProgress": "音声エンジンのインストール {percent}%",
@@ -65,14 +65,12 @@
     "verifiedBeforeUse": "使用前にリビジョンと SHA-256 を検証",
     "engineTerms": "インストールにはネットワークを使用し、中断と再開が可能です。Seed-VC は GPL-3.0、ダウンロードするモデル成果物には各提供元の条件が適用されます。",
     "engineReady": "エンジンの検証が完了しました。",
-    "setupLaterHint": "後で「設定 → 声」からインストールできます。",
-    "setUpLater": "後で設定",
     "opening": "起動中…",
     "openProduct": "Persona Voice を開く",
     "starting": "開始中…",
     "resumeDownload": "ダウンロードを再開",
     "retrySetup": "設定を再試行",
-    "installEngine": "エンジンをインストール"
+    "chooseModelHint": "選択したモデルをインストールすると続行できます。"
   },
   "platformAudio": {
     "kicker": "システム音声経路",
@@ -208,9 +206,9 @@
         "keywords": "入力元 ChatGPT Codex 取得 経路 アプリ サーバー 入力 出力"
       },
       "voice": {
-        "label": "声",
-        "description": "インストール済みのローカル音声を試聴・選択します。",
-        "keywords": "モデル Seed VC プリセット 変換先 サンプル ライセンス クレジット"
+        "label": "音声モデル",
+        "description": "モデルの選択、ダウンロード、声の変更を行います。",
+        "keywords": "モデル Seed VC プリセット 変換先 サンプル ライセンス クレジット chatterbox download install performance"
       },
       "history": {
         "label": "履歴とプライバシー",
@@ -251,13 +249,13 @@
     },
     "voice": {
       "installedVoices": "インストール済みの声",
-      "installedVoicesBody": "元の参照音声を試聴してから、Seed-VC で使う声質を選んでください。",
+      "installedVoicesBody": "元の参照音声を試聴し、選択したモデルで使う声を選んでください。",
       "pause": "一時停止",
       "preview": "試聴",
       "playing": "再生中",
       "terms": "利用条件",
       "engineProfile": "エンジンプロファイル",
-      "engineProfileBody": "計測した遅延を再現できるよう、現在のリアルタイムプロファイルは固定されています。",
+      "engineProfileBody": "各モデルは計測済みのストリーミングプロファイルを使用します。",
       "profileFacts": "300 ms ブロック · 拡散 10 ステップ · セッション開始時 3 秒破棄",
       "enginePackage": "音声エンジンパッケージ",
       "installedLocally": "ローカルに {size} インストール済み",
@@ -340,5 +338,25 @@
       "workerLoading": "読み込み中",
       "workerReady": "準備完了"
     }
+  },
+  "models": {
+    "title": "音声モデル",
+    "switchHint": "モデルを選び、必要ならダウンロードしてください。切り替えやインストールの前にリレーを停止してください。",
+    "tinyDescription": "このアプリでの音声比較では、日本語と中国語に最も適しています。",
+    "chatterboxDescription": "英語やその他の言語向けのおすすめです。英語で検証済み。品質は言語や声によって異なります。",
+    "needsInstall": "ダウンロードが必要",
+    "chatterboxFacts": "{blockMs} ms ブロック · 240 ms 先読み · 拡散 10 ステップ",
+    "chatterboxDownloadNotice": "管理対象 Python、固定パッケージ、SHA-256 検証済みモデルをダウンロードします。Chatterbox と MLX-Audio は MIT ライセンスです。変換音声には提供元の PerTh 透かしが含まれます。",
+    "onboardingHint": "選択したモデルだけをダウンロードします。",
+    "tinyPerformance": "小さなストリーミングブロック · 300 ms",
+    "chatterboxPerformance": "Apple Silicon で効率的に処理 · 640 ms ブロック",
+    "recommended": "おすすめ",
+    "released": "{year}年公開",
+    "selected": "選択中",
+    "installed": "インストール済み",
+    "installing": "ダウンロード中…",
+    "appleSiliconOnly": "Apple Silicon Mac が必要",
+    "installModel": "{model}をダウンロード",
+    "performanceNote": "Apple M4 Pro で同じ61秒の英語音声を比較した結果、Chatterbox の処理時間は29%短くなりました。速度はデバイスによって異なります。"
   }
 }

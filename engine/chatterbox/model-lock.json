@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "profile": "darwin-arm64-mlx",
+  "model": {
+    "repository": "ResembleAI/chatterbox",
+    "revision": "5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18",
+    "sourceCommit": "5de7a54aa4e5e2baadb0182dde554908b48b85c2",
+    "files": {
+      "s3gen.safetensors": "2b78103c654207393955e4900aac14a12de8ef25f4b09424f1ef91941f161d4e"
+    }
+  },
+  "mlxAudio": {
+    "repository": "https://github.com/Blaizzy/mlx-audio",
+    "commit": "41537ec5cf79bcf731a0dd6749cac12ab554a691"
+  },
+  "stream": { "blockMs": 640, "initialBlockMs": 0, "lookaheadMs": 240, "steps": 10, "promptSeconds": 3, "precision": "fp32" },
+  "input": { "sampleFormat": "f32le", "maximumPacketMs": 40 },
+  "output": { "sampleRate": 24000, "channels": 1, "sampleFormat": "f32le" }
+}

@@ -3,7 +3,7 @@
 The engine boundary has two layers:
 
 1. an internal Electron adapter lifecycle used by `PipelineRuntime`;
-2. the CPVE framed process protocol used by the current Seed-VC adapter.
+2. the CPVE framed process protocol used by the built-in Seed-VC and Chatterbox adapters.
 
 Both are internal development contracts. There is no published engine SDK or dynamic third-party
 adapter loader yet; the proposed stabilization work is tracked in [Engine SDK plan](ENGINE_SDK.md).
@@ -51,7 +51,7 @@ missing or invalid. An identity converter is not valid readiness.
   `sampleFormat: "f32le"`.
 - Output hardware is not opened by the engine. Electron opens it only after source suppression is
   engaged.
-- Only one active engine session is allowed by the current Seed-VC adapter.
+- Only one active engine session is allowed by either built-in adapter.
 
 ### Conversion and reset
 
@@ -150,6 +150,10 @@ two-integer compute capability, and the exact `cu130` backend.
 
 The worker resamples and downmixes inside the pinned Seed-VC implementation, applies speech/silence
 handling and SOLA state, and operates with Hugging Face/Transformers offline flags after setup.
+Only digital silence skips inference after the trailing overlap has drained. Nonzero input is
+processed regardless of its volume: a fixed amplitude threshold can discard quiet speech. The
+converter does not classify speech or suppress background noise. RMS uses float64 accumulation so
+valid, very small float32 samples do not underflow into a false silence decision.
 Electron verifies runtime metadata against the current model-lock hash before reporting ready. On
 worker startup, before importing Torch or upstream Seed-VC code, Python resolves only the exact
 locked offline snapshot paths and rechecks the byte size and SHA-256 of every model artifact. The
@@ -174,3 +178,44 @@ Every present or future model adapter must:
 - bound every queue, message, request, and shutdown wait;
 - expose truthful format and latency capabilities rather than relying on model-name heuristics;
 - pass the conformance work described in [Model adapters](MODEL_ADAPTERS.md).
+
+## Built-in model selection and Chatterbox adapter
+
+The separate `engine/chatterbox/` profile and `electron/chatterbox-engine.cjs` implement the same
+Electron lifecycle. Settings → Voice model and first-run setup expose the fixed built-in model
+catalog; Home displays the selected model. `selectedModelId` persists the explicit choice (`seed-vc` or `chatterbox`); existing state
+without this new field keeps Seed-VC. Only a new Apple Silicon state file defaults to Chatterbox.
+Unknown or unsupported choices fail explicitly. Completing onboarding runs under the stopped-state
+mutation gate, requires the selected installer to be ready, and rechecks the selected engine.
+The other model may remain absent.
+
+Only `voice:select-model` may change that setting, while the relay is stopped and no installation
+or other stopped-state mutation is active. The previous worker is shut down before persisting
+the new choice; failure leaves the choice intact. The voice and source are retained. Probe,
+prepare, diagnostics and install/remove resolve the selected engine without model substitution.
+On macOS the same choice selects the native output profile: Tiny uses 500/0 ms prebuffer/reserve,
+Chatterbox uses 400/200 ms. Active streams cannot change models.
+
+Chatterbox installs into its own runtime, staging, managed-Python and cache directories. Its
+installer uses the pinned Hugging Face client for resumable downloads in owned staging, with
+account-token use disabled. It verifies pinned Python packages and Git revisions, Metal execution, checkpoint SHA-256
+and every learned graph tensor before publishing an installation receipt. Removal cannot remove
+Seed-VC's Python. Checkpoint and reference hashes are verified again before each worker becomes
+ready. This is a built-in integration, not a public SDK or automatic selection path.
+
+Its CPVE Ready declares the locked model hash, requirements-lock hash, voice hash, source format,
+24 kHz mono float32 output, block size, lookahead, prompt duration and diffusion steps. Startup
+verifies Python, every pinned distribution version and both Git-installed dependency revisions.
+The sidecar runs with Python isolated mode and an explicit engine-owned import directory.
+
+Convert accepts at most 40 ms of finite PCM and can return zero samples while its bounded window
+fills. The adapter splits emitted audio into at most 20 ms playback frames. Digital silence keeps
+the sample clock moving; quiet speech is never suppressed. Reset clears resampling, token/noise
+history and overlap; the host invalidates any in-flight result before acknowledging completion.
+An optional explicit `finish`/`finished` exchange flushes the end of a test stream. It is never
+triggered by a pause or sentence detector and is not the interruption path.
+
+The Core Audio output adapter independently accepts a bounded prebuffer duration and startup
+clock reserve, validates both values against native Ready, and keeps its original defaults for
+existing callers. See [Voice quality investigation](VOICE_QUALITY.md) for measured profiles and
+the distinction between model availability, native queue startup and hardware playback latency.

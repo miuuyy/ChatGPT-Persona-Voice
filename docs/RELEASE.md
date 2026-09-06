@@ -1,5 +1,17 @@
 # Release engineering
 
+## Unreleased model integration
+
+The current source adds Chatterbox on Apple Silicon, keeps Seed-VC on existing installations,
+and requires one selected model during onboarding. Settings → Voice model manages both packages.
+English live listening on the owner's Mac has been accepted. Model comparison, years, host limits,
+and preserved failed experiments are in [Voice models](VOICE_MODELS.md).
+
+Local verification includes renderer/IPC setup scenarios with isolated data and fixture downloads,
+model-free Python contracts, existing Node/native checks, and a local macOS package. This is not a
+published version. Production signing/notarization and clean-host qualification below remain
+release gates; no tag or release should be inferred from local artifacts.
+
 Status: `v0.1.5` is the preview release for macOS, Windows, and Linux. Windows uses VB-CABLE as a
 separately installed prerequisite and still needs broader physical-host acceptance.
 

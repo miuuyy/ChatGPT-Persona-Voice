@@ -2,9 +2,11 @@
 
 This guide covers the three target-native paths:
 
-- Apple Silicon macOS 14.2+ with Apple MPS;
+- Apple Silicon macOS 14.2+ with Apple MPS (Seed-VC) or MLX (Chatterbox);
 - Windows x64 build 20348+ with NVIDIA CUDA and VB-CABLE installed separately from VB-Audio;
 - Linux x64 with NVIDIA CUDA, PipeWire, and WirePlumber 0.4 or 0.5.
+
+For controlled local audio comparisons and their limits, see [Voice quality investigation](VOICE_QUALITY.md).
 
 macOS, Ubuntu 24.04/WirePlumber 0.4, and Fedora 42/PipeWire 1.4.11/WirePlumber 0.5.14 have live
 relay acceptance evidence. The packaged Windows path still needs broader clean-host feedback.
@@ -23,14 +25,15 @@ relay acceptance evidence. The packaged Windows path still needs broader clean-h
 
 | Platform | Required for target-native development |
 | --- | --- |
-| macOS arm64 | macOS 14.2+, Xcode Command Line Tools, Apple MPS |
+| macOS arm64 | macOS 14.2+, Xcode Command Line Tools, Apple MPS/MLX |
 | Linux x64 | C++20 compiler, `pkg-config`, PipeWire development headers/runtime, WirePlumber, supported NVIDIA GPU/driver |
 | Windows x64 | Windows build 20348+, Visual Studio/MSVC, CMake, Windows SDK, supported NVIDIA GPU/driver, VB-CABLE |
 
 Install VB-CABLE from its [official page](https://vb-audio.com/Cable/), run its setup as
 administrator, and restart Windows. Persona Voice does not bundle or redistribute it.
 
-The engine installer estimates approximately 2.5 GiB installed and 6 GiB minimum free on macOS,
+Chatterbox estimates 4 GiB installed and 8 GiB free on macOS. Seed-VC estimates approximately
+2.5 GiB installed and 6 GiB minimum free on macOS,
 9 GiB installed and 15 GiB free on Windows, and 11 GiB installed and 15 GiB free on Linux. Keep
 additional space for dependencies and native build products.
 
@@ -136,11 +139,27 @@ It then:
 There is no CPU fallback and no automatic platform/profile substitution. Inference is configured
 offline after setup.
 
-Packaged applications expose the same profile resolution through **Settings → Voice → Install
-engine**, using the embedded pinned `uv` and platform lock. That implementation does not by itself
+Packaged applications expose the same profile resolution through **Settings → Voice model → Download Seed-VC Tiny**, using the embedded pinned `uv` and platform lock. That implementation does not by itself
 prove a clean distributable; see [Release engineering](RELEASE.md).
 
 ## Run the app
+
+First-run setup requires exactly one installed model. New Apple Silicon installations recommend
+Chatterbox; existing selections, including older Seed-VC state, are preserved. **Settings → Voice
+model** manages selection, additional downloads, and removal. The Home screen shows the active
+model without another selector. Seed-VC Tiny retains the existing platform profiles. Chatterbox is available on Apple Silicon macOS and installs through
+the same Settings screen into separate storage. For a source checkout:
+
+```bash
+bun run setup:chatterbox
+```
+
+The Chatterbox installer pins CPython 3.11.14, package versions and two Git source revisions,
+verifies Metal and the complete checkpoint mapping, and publishes a hash-bound receipt. A local
+checkpoint can be reused with `node scripts/setup-chatterbox.cjs --checkpoint /absolute/path/s3gen.safetensors`;
+the same locked SHA-256 is required. No experimental environment paths are used by the app.
+Stop the relay before changing models. Voice/source selection is retained, and the previous worker
+is closed before the new choice is persisted. Model loading on Start is separate from streaming latency.
 
 ```bash
 bun run dev
@@ -149,8 +168,7 @@ bun run dev
 `dev` builds and self-tests the native helpers for the current OS before starting Vite and Electron.
 Start ChatGPT or Codex so source discovery has a live process tree/stream. On Linux/Windows, the
 first-run system-audio step installs or verifies the platform route before the engine step. Linux
-needs the managed policy installed/reloaded; Windows needs the signed sink installed by the elevated
-app installer and may need the per-app Volume Mixer assignment described above.
+needs the managed policy installed/reloaded; Windows needs the VB-CABLE driver installed separately from VB-Audio and may need the per-app Volume Mixer assignment described above.
 
 To isolate development data from a normal install, set an absolute directory with the syntax for
 your shell:
@@ -180,6 +198,36 @@ bun run test:native
 tests, typecheck, renderer build, native compilation, and native self-tests on macOS, Windows, and
 Linux. Linux native self-tests use a private PipeWire session. These commands verify build/protocol
 contracts, not permissioned live routing, clean installation, CUDA latency, or release support.
+
+### Model selection and streaming contracts
+
+```bash
+# Model-free numerical/protocol checks (Python 3.11):
+python3 -m pip install numpy==1.26.4 soxr==1.1.0
+bun run test:chatterbox
+# Apple Silicon: built renderer, real IPC and isolated state, fixture downloads/GPU:
+bun run build
+bun run test:ui:mac
+```
+
+The UI check exercises missing models, both one-model completion paths, cancellation/retry,
+selection locks, later installation, keyboard selection, and all three locales. It never starts
+capture, downloads models, or modifies user data. Screenshots and a report are written to
+`artifacts/model-ui/`. CI includes these checks; real model/route smokes remain separate.
+
+For a paced Chatterbox comparison with authorized local audio:
+
+```bash
+node scripts/smoke-chatterbox-pipeline.cjs --engine chatterbox \
+  --source /absolute/source.wav --reference /absolute/reference.wav \
+  --python runtime/chatterbox/.venv/bin/python --weights runtime/chatterbox/weights \
+  --prebuffer-ms 400 --startup-delay-ms 200 --output /absolute/unused-output-dir
+```
+
+For Tiny use `--engine seed --prebuffer-ms 500 --startup-delay-ms 0` and omit `--python`/`--weights`.
+This benchmark consumes Tiny's startup discard before timed input and reports it separately.
+Only `--play` sends actual speech to the hardware; otherwise the native queue receives silence.
+See [Voice models](VOICE_MODELS.md) for the current comparison and its limits.
 
 ### Engine smoke
 
@@ -215,6 +263,7 @@ evidence. The generic native self-tests do not replace those runs.
 | `native/windows/` | WASAPI process-loopback, route verifier, and bounded output helpers |
 | `native/shared/` | CPV1 native protocol layout |
 | `engine/seed-vc/` | CPVE worker, platform locks, model verification, installer inputs |
+| `engine/chatterbox/` | Streaming CPVE worker, MLX graph, pinned packages/model, verified installer |
 | `engine/vendor/seed-vc/` | Pinned GPL-3.0 Seed-VC source submodule |
 | `voices/` | Target-voice manifest and integrity-checked WAV references |
 | `scripts/` | Target-native build, engine setup, policy, packaging, and smoke commands |

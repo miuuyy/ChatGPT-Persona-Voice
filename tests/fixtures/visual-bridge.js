@@ -8,6 +8,8 @@
     update: { status: "up-to-date" },
     settings: {
       uiLocale: "en",
+      selectedModelId: "seed-vc",
+      windowsManualRouteConfigured: false,
       sourceMode: "desktop-application",
       sourceId: null,
       sourceName: null,
@@ -46,6 +48,7 @@
         { id: "output", label: "Converted output", ready: true, code: "ready", detail: "Core Audio output helper and default device passed self-test" },
       ],
     },
+    platformAudioSetup: { status: "ready", code: "not_required", detail: "No additional system route required on macOS", canInstall: false, canActivate: false, canRemove: false, requiresRouteAssignment: false },
     engineInstallation: {
       status: "ready",
       detail: "The locked Seed-VC engine package is installed",
@@ -81,6 +84,12 @@
     ],
   };
 
+  state.models = [
+    { id: "seed-vc", name: "Seed-VC Tiny", releaseYear: 2024, blockMs: 300, supported: true, recommended: false, installation: state.engineInstallation },
+    { id: "chatterbox", name: "Chatterbox", releaseYear: 2025, blockMs: 640, supported: true, recommended: true,
+      installation: { status: "idle", detail: "Model download required", estimatedInstalledBytes: 4 * 1024 ** 3, minimumFreeBytes: 8 * 1024 ** 3, resumable: false } },
+  ];
+
   const clone = (value) => JSON.parse(JSON.stringify(value));
   const publish = () => snapshotListeners.forEach((listener) => listener(clone(state)));
   window.codexPersonaVoice = {
@@ -95,6 +104,14 @@
     setAutostart: async (enabled) => { state.settings.launchAtLogin = enabled; state.autostart.enabled = enabled; publish(); return clone(state.autostart); },
     selectSource: async (source) => { state.settings.sourceId = source?.id ?? null; state.settings.sourceName = source?.name ?? null; publish(); return clone(state.settings); },
     selectSourceMode: async (mode) => { state.settings.sourceMode = mode; publish(); return clone(state.settings); },
+    selectModel: async (id) => {
+      const model = state.models.find(candidate => candidate.id === id);
+      if (!model?.supported) throw new Error("Unsupported model");
+      state.settings.selectedModelId = id;
+      state.engineInstallation = model.installation;
+      publish();
+      return clone(state.settings);
+    },
     selectVoice: async (id) => { const voice = state.voices.find((candidate) => candidate.id === id); state.settings.selectedVoiceId = voice.id; state.settings.selectedVoiceName = voice.name; publish(); return clone(state.settings); },
     voiceSample: async (id) => ({ voice: clone(state.voices.find((candidate) => candidate.id === id)), data: new Uint8Array(), mimeType: "audio/wav" }),
     openVoiceTerms: async () => true,

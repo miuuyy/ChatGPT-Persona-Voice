@@ -56,8 +56,8 @@
     "socialPrivacy": "Persona Voice can confirm that each page opened, but never reads your GitHub or X account.",
     "supportOptional": "Supporting the project is optional.",
     "engineKicker": "LOCAL VOICE ENGINE",
-    "engineTitle": "Install the engine that changes the voice.",
-    "engineBody": "The launcher stays small. Seed-VC, managed Python, and seven pinned model files are installed separately into private app storage.",
+    "engineTitle": "Choose your first voice model.",
+    "engineBody": "Download one model to get started. You can install the other later in Settings → Voice model.",
     "installedLocally": "{size} installed locally",
     "installSize": "About {installed} installed · {free} free space required",
     "installProgress": "Engine installation {percent} percent",
@@ -65,14 +65,12 @@
     "verifiedBeforeUse": "Revisions and SHA-256 verified before use",
     "engineTerms": "Installation uses the network and can be cancelled or resumed. Seed-VC is GPL-3.0; downloaded model artifacts retain their upstream terms.",
     "engineReady": "Engine verified and ready.",
-    "setupLaterHint": "You can install it later from Settings → Voice.",
-    "setUpLater": "Set up later",
     "opening": "Opening…",
     "openProduct": "Open Persona Voice",
     "starting": "Starting…",
     "resumeDownload": "Resume download",
     "retrySetup": "Retry setup",
-    "installEngine": "Install engine"
+    "chooseModelHint": "Install the selected model to continue."
   },
   "platformAudio": {
     "kicker": "SYSTEM AUDIO ROUTE",
@@ -208,9 +206,9 @@
         "keywords": "source chatgpt codex capture route application app server input output"
       },
       "voice": {
-        "label": "Voice",
-        "description": "Preview and select an installed local voice.",
-        "keywords": "model seed vc preset target sample anime license credit"
+        "label": "Voice model",
+        "description": "Choose a model, manage downloads, and select your voice.",
+        "keywords": "model seed vc preset target sample anime license credit chatterbox download install performance"
       },
       "history": {
         "label": "History & privacy",
@@ -251,13 +249,13 @@
     },
     "voice": {
       "installedVoices": "Installed voices",
-      "installedVoicesBody": "Preview the original reference, then choose the timbre used by Seed-VC.",
+      "installedVoicesBody": "Preview the original reference, then choose the voice used by the selected model.",
       "pause": "Pause",
       "preview": "Preview",
       "playing": "Playing",
       "terms": "Terms",
       "engineProfile": "Engine profile",
-      "engineProfileBody": "The current realtime profile is fixed so measured latency remains reproducible.",
+      "engineProfileBody": "Each model uses its measured streaming profile.",
       "profileFacts": "300 ms blocks · 10 diffusion steps · 3 s session-start discard",
       "enginePackage": "Voice engine package",
       "installedLocally": "{size} installed locally",
@@ -340,5 +338,25 @@
       "workerLoading": "loading",
       "workerReady": "ready"
     }
+  },
+  "models": {
+    "title": "Voice model",
+    "switchHint": "Choose a model below, then download it if needed. Stop the relay before switching or installing.",
+    "tinyDescription": "Best suited to Japanese and Chinese speech in our voice comparisons.",
+    "chatterboxDescription": "Our choice for English and other languages. English tested; results vary by language and voice.",
+    "needsInstall": "Download required",
+    "chatterboxFacts": "{blockMs} ms blocks · 240 ms lookahead · 10 diffusion steps",
+    "chatterboxDownloadNotice": "Downloads managed Python, pinned packages and a SHA-256 verified model. Chatterbox and MLX-Audio use the MIT license. Converted audio includes the upstream PerTh watermark.",
+    "onboardingHint": "Only the selected model will be downloaded.",
+    "tinyPerformance": "Smaller streaming blocks · 300 ms",
+    "chatterboxPerformance": "Efficient Apple Silicon processing · 640 ms blocks",
+    "recommended": "Recommended",
+    "released": "Released in {year}",
+    "selected": "Selected",
+    "installed": "Installed",
+    "installing": "Downloading…",
+    "appleSiliconOnly": "Requires an Apple Silicon Mac",
+    "installModel": "Download {model}",
+    "performanceNote": "On Apple M4 Pro, Chatterbox took 29% less processing time for the same 61-second English clip. Speed varies by device."
   }
 }

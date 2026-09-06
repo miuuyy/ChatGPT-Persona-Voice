@@ -15,6 +15,7 @@ import type {
   VoicePreset,
 } from "../../types";
 import { Switch } from "../../components/AppShell";
+import { ModelSelector } from "../../components/ModelSelector";
 import {
   errorMessage,
   formatBytes,
@@ -46,6 +47,7 @@ export type SettingsSectionProps = {
   onDiscoverSources: () => void;
   onSelectSource: (source: AudioSource | null) => void;
   onSelectVoice: (id: string) => void;
+  onSelectModel: (id: Settings["selectedModelId"]) => void;
   onPreviewVoice: (voice: VoicePreset) => void;
   onVoiceTerms: (voice: VoicePreset) => void;
   onRequestClear: () => void;
@@ -69,6 +71,7 @@ export function SettingsSections({
   onDiscoverSources,
   onSelectSource,
   onSelectVoice,
+  onSelectModel,
   onPreviewVoice,
   onVoiceTerms,
   onRequestClear,
@@ -129,6 +132,7 @@ export function SettingsSections({
   const selectedVoice = snapshot.voices.find(
     (voice) => voice.id === settings.selectedVoiceId,
   );
+  const selectedModel = snapshot.models.find((model) => model.id === settings.selectedModelId)!;
   const selectedSourceMissing =
     settings.sourceId !== null &&
     !sources.some((source) => source.id === settings.sourceId);
@@ -269,27 +273,7 @@ export function SettingsSections({
   if (section === "voice")
     return (
       <>
-        <div className="settings-block">
-          <div className="settings-block-heading">
-            <h3>{messages.settings.voice.installedVoices}</h3>
-            <p>{messages.settings.voice.installedVoicesBody}</p>
-          </div>
-          <div className="voice-list">
-            {snapshot.voices.map((voice, index) => (
-              <VoiceChoice
-                disabled={busy}
-                index={index}
-                key={voice.id}
-                onPreview={() => onPreviewVoice(voice)}
-                onSelect={() => onSelectVoice(voice.id)}
-                onTerms={() => onVoiceTerms(voice)}
-                playing={playingKey === `voice:${voice.id}`}
-                selected={settings.selectedVoiceId === voice.id}
-                voice={voice}
-              />
-            ))}
-          </div>
-        </div>
+        <ModelSelector snapshot={snapshot} busy={busy} onSelect={onSelectModel} />
         <div className="settings-block">
           <div className="settings-block-heading">
             <h3>{messages.settings.voice.engineProfile}</h3>
@@ -300,10 +284,14 @@ export function SettingsSections({
               <Icon name="sparkles" />
             </span>
             <div>
-              <strong>Seed-VC tiny · realtime</strong>
+              <strong>{selectedModel.name}</strong>
               <p>{engineCheck?.detail || capabilities.engine.detail}</p>
               <small>
-                {messages.settings.voice.profileFacts}
+                {settings.selectedModelId === "chatterbox"
+                  ? formatMessage(messages.models.chatterboxFacts, {
+                      blockMs: new Intl.NumberFormat(locale).format(selectedModel.blockMs),
+                    })
+                  : messages.settings.voice.profileFacts}
               </small>
             </div>
             <span
@@ -391,13 +379,34 @@ export function SettingsSections({
                   ? messages.settings.voice.removing
                   : engineInstallation.resumable
                     ? messages.settings.voice.resume
-                    : messages.settings.voice.installEngine}
+                    : formatMessage(messages.models.installModel, { model: selectedModel.name })}
               </button>
             )}
           </div>
           <div className="settings-footnote inline">
             <Icon name="lock" />
-            <span>{messages.settings.voice.downloadNotice}</span>
+            <span>{settings.selectedModelId === "chatterbox" ? messages.models.chatterboxDownloadNotice : messages.settings.voice.downloadNotice}</span>
+          </div>
+        </div>
+        <div className="settings-block">
+          <div className="settings-block-heading">
+            <h3>{messages.settings.voice.installedVoices}</h3>
+            <p>{messages.settings.voice.installedVoicesBody}</p>
+          </div>
+          <div className="voice-list">
+            {snapshot.voices.map((voice, index) => (
+              <VoiceChoice
+                disabled={busy}
+                index={index}
+                key={voice.id}
+                onPreview={() => onPreviewVoice(voice)}
+                onSelect={() => onSelectVoice(voice.id)}
+                onTerms={() => onVoiceTerms(voice)}
+                playing={playingKey === `voice:${voice.id}`}
+                selected={settings.selectedVoiceId === voice.id}
+                voice={voice}
+              />
+            ))}
           </div>
         </div>
         {selectedVoice ? (
@@ -808,9 +817,11 @@ export function SettingsSections({
           </code>
           <span>{messages.settings.diagnostics.profile}</span>
           <code>
-            {snapshot.engineDiagnostics.blockMs} ms ·{" "}
+            {snapshot.engineDiagnostics.blockMs ?? "—"} ms ·{" "}
             {formatMessage(messages.settings.diagnostics.steps, {
-              count: new Intl.NumberFormat(locale).format(snapshot.engineDiagnostics.steps),
+              count: snapshot.engineDiagnostics.steps === null
+                ? "—"
+                : new Intl.NumberFormat(locale).format(snapshot.engineDiagnostics.steps),
             })}
           </code>
           <span>{messages.settings.diagnostics.runtimeProfile}</span>

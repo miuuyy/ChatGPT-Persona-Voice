@@ -26,7 +26,7 @@ function selfTest(executable, expectedHelper) {
   }
 }
 
-function smokeOutput(executable) {
+function smokeOutput(executable, { prebufferMs = 500, startupDelayMs = 0 } = {}) {
   const samplesPerChannel = 1;
   const frame = encodeAudioFrame({
     sequence: 0,
@@ -36,7 +36,8 @@ function smokeOutput(executable) {
     samplesPerChannel,
     pcm: Buffer.alloc(samplesPerChannel * Float32Array.BYTES_PER_ELEMENT),
   });
-  const result = spawnSync(executable, ["--sample-rate", "24000", "--channels", "1"], {
+  const result = spawnSync(executable, ["--sample-rate", "24000", "--channels", "1",
+    "--startup-prebuffer-ms", String(prebufferMs), "--startup-delay-ms", String(startupDelayMs)], {
     input: Buffer.concat(Array(65).fill(frame)),
     encoding: null,
     timeout: 10_000,
@@ -52,7 +53,7 @@ function smokeOutput(executable) {
   parser.finish();
   if (messages.length < 1 || messages[0].type !== "ready" || messages[0].helper !== "output" ||
       messages[0].supportsJitterBuffer !== true || messages[0].startsWhenQueueFull !== true ||
-      messages[0].startupPrebufferMs !== 500 || !Array.isArray(messages[0].memberDeviceUids) ||
+      messages[0].startupPrebufferMs !== prebufferMs || messages[0].startupDelayMs !== startupDelayMs || !Array.isArray(messages[0].memberDeviceUids) ||
       messages[0].memberDeviceUidsVerified !== true ||
       typeof messages[0].isAggregateDevice !== "boolean" ||
       messages.slice(1).some((message) => message.type !== "status" ||
@@ -96,6 +97,16 @@ function testNative(platform = process.platform) {
   selfTest(capture, "capture");
   selfTest(output, "output");
   smokeOutput(output);
+  smokeOutput(output, { prebufferMs: 400, startupDelayMs: 200 });
+  for (const args of [["--startup-prebuffer-ms"], ["--startup-prebuffer-ms", "399"], ["--startup-delay-ms", "501"]]) {
+    const result = spawnSync(output, ["--self-test", ...args], { timeout: 3000 });
+    const messages = [];
+    const parser = new NativeFrameParser((message) => messages.push(message));
+    parser.push(result.stdout); parser.finish();
+    if (result.status !== 1 || messages.length !== 1 || messages[0].type !== "error" || messages[0].code !== "invalid_arguments") {
+      throw new Error("Output accepted an invalid playout-buffer setting");
+    }
+  }
   smokeAtomicSwap(atomicSwap);
   console.log("macOS capture, output, and atomic updater helper smoke tests passed.");
 }

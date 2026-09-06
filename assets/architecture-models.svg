@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
+  <title id="title">Persona Voice: choose a local voice model</title>
+  <desc id="desc">ChatGPT or Codex audio enters the Persona Voice route, is converted by the selected Chatterbox or Seed-VC model, and plays through the speakers. Conversion is local and streams continuously.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#171e29"/><stop offset="1" stop-color="#101316"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10" fill="none" stroke="#6b829c" stroke-width="1.5"/></marker>
+  </defs>
+  <rect width="1200" height="320" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui, -apple-system, sans-serif" fill="#e7edf6">
+    <text x="40" y="47" font-size="15" letter-spacing="2" fill="#91a7c2">PERSONA VOICE</text>
+    <text x="40" y="285" font-size="13" fill="#91a7c2">Local conversion · continuous streaming · one selected model</text>
+    <g fill="#1d2734" stroke="#37495d">
+      <rect x="40" y="101" width="235" height="117" rx="16"/>
+      <rect x="337" y="101" width="212" height="117" rx="16"/>
+      <rect x="611" y="75" width="280" height="169" rx="16" stroke="#71b7ff"/>
+      <rect x="953" y="101" width="207" height="117" rx="16"/>
+    </g>
+    <g fill="none" stroke="#6b829c" stroke-width="2" marker-end="url(#arrow)">
+      <path d="M279 160H329"/><path d="M553 160H603"/><path d="M895 160H945"/>
+    </g>
+    <g text-anchor="middle">
+      <text x="157" y="148" font-size="20" font-weight="600">ChatGPT / Codex</text>
+      <text x="157" y="176" font-size="13" fill="#a2b0c1">Your conversation stays here</text>
+      <text x="443" y="148" font-size="20" font-weight="600">Audio route</text>
+      <text x="443" y="176" font-size="13" fill="#a2b0c1">Original playback suppressed</text>
+      <text x="751" y="107" font-size="12" fill="#91a7c2">SELECTED VOICE MODEL</text>
+      <text x="751" y="146" font-size="22" font-weight="600" fill="#91c8ff">Chatterbox</text>
+      <text x="751" y="169" font-size="12" fill="#91a7c2">or</text>
+      <text x="751" y="201" font-size="22" font-weight="600">Seed-VC Tiny</text>
+      <text x="1056" y="148" font-size="20" font-weight="600">Speakers</text>
+      <text x="1056" y="176" font-size="13" fill="#a2b0c1">Your chosen voice</text>
+    </g>
+  </g>
+</svg>

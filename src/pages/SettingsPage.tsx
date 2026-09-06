@@ -24,6 +24,7 @@ export function SettingsPage({
   onDiscoverSources,
   onSelectSource,
   onSelectVoice,
+  onSelectModel,
   onPreviewVoice,
   onVoiceTerms,
   onRequestClear,
@@ -123,6 +124,7 @@ export function SettingsPage({
             onRemoveEngine={onRemoveEngine}
             onSelectSource={onSelectSource}
             onSelectVoice={onSelectVoice}
+            onSelectModel={onSelectModel}
             onSetting={onSetting}
             onVoiceTerms={onVoiceTerms}
             playingKey={playingKey}

@@ -568,7 +568,7 @@ class StreamingConverter:
         if not np.isfinite(values).all():
             raise RuntimeError("PCM block contains non-finite samples")
         mono = values.reshape(-1, self.source_channels).mean(axis=1, dtype=np.float32)
-        rms = float(np.sqrt(np.mean(np.square(mono, dtype=np.float32))))
+        rms = float(np.sqrt(np.mean(np.square(mono, dtype=np.float64))))
         resampled = self.librosa.resample(
             mono, orig_sr=self.source_rate, target_sr=self.sample_rate, res_type="soxr_hq",
         )
@@ -613,7 +613,7 @@ class StreamingConverter:
                     inference_cfg_rate=0.7,
                 )
                 converted_mel = converted_mel[:, :, self.prompt_mel.size(-1):]
-                converted_wave = self.vocoder_fn(converted_mel).squeeze()
+                converted_wave = self.vocoder_fn(converted_mel).squeeze().float()
             output_length = self.return_length * self.sample_rate // 50
             tail_length = self.skip_tail * self.sample_rate // 50
             return converted_wave[-output_length - tail_length:-tail_length]
@@ -629,12 +629,14 @@ class StreamingConverter:
     def convert(self, body: bytes) -> tuple[bytes, dict[str, object]]:
         started = time.perf_counter()
         rms = self._update_input(body)
-        speech = rms >= 0.0015
-        if speech:
+        # Capture volume does not determine whether a block contains speech.
+        # Only digital silence can skip inference without discarding quiet words.
+        has_audio = rms > 0.0
+        if has_audio:
             self.hangover_blocks = 2
         elif self.hangover_blocks > 0:
             self.hangover_blocks -= 1
-        should_infer = speech or self.hangover_blocks > 0
+        should_infer = has_audio or self.hangover_blocks > 0
         if not should_infer:
             self.sola_buffer.zero_()
             output = self.np.zeros(self.block_frame, dtype="<f4")

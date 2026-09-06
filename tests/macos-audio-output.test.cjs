@@ -38,6 +38,8 @@ function outputReady({
   memberDeviceUids = [],
   memberDeviceUidsVerified = true,
   isAggregateDevice = false,
+  startupPrebufferMs = 500,
+  startupDelayMs = 0,
 } = {}) {
   return encodeFrame(
     "ready",
@@ -53,7 +55,8 @@ function outputReady({
         queueCapacityFrames: 64,
         supportsJitterBuffer: true,
         startsWhenQueueFull: true,
-        startupPrebufferMs: 500,
+        startupPrebufferMs,
+        startupDelayMs,
         deviceUid,
         deviceName,
         usesDefaultDevice,
@@ -66,6 +69,42 @@ function outputReady({
 }
 
 const nextTurn = () => new Promise((resolve) => setImmediate(resolve));
+
+test("macOS output verifies a requested prebuffer and rejects stale helper readiness", async () => {
+  const child = fakeChild();
+  const ready = {
+    supportsJitterBuffer: true, startsWhenQueueFull: true, startupPrebufferMs: 400, startupDelayMs: 200, queueCapacityFrames: 64,
+    deviceUid: "default-device", deviceName: "Default output", usesDefaultDevice: true,
+    memberDeviceUids: [], memberDeviceUidsVerified: true, isAggregateDevice: false,
+  };
+  const output = new MacAudioOutput({
+    helperPath: "/helpers/output", platform: "darwin", exists: () => true, startupPrebufferMs: 400, startupDelayMs: 200,
+    probeHelper: async (_file, _type, { args }) => {
+      assert.deepEqual(args, ["--self-test", "--startup-prebuffer-ms", "400", "--startup-delay-ms", "200"]);
+      return ready;
+    },
+    spawnProcess: (_file, args) => {
+      assert.ok(args.includes("--startup-prebuffer-ms"));
+      assert.ok(args.includes("400"));
+      return child;
+    },
+  });
+  const preparing = output.prepare({}, { sampleRate: 24000, channels: 1, sampleFormat: "f32le" }, () => {});
+  await nextTurn();
+  child.stdout.emit("data", outputReady({ startupPrebufferMs: 400, startupDelayMs: 200 }));
+  await (await preparing).close();
+  const stale = new MacAudioOutput({
+    helperPath: "/helpers/output", platform: "darwin", exists: () => true, startupPrebufferMs: 400,
+    probeHelper: async () => ({ ...ready, startupPrebufferMs: 500 }),
+  });
+  assert.equal((await stale.probe()).ready, false);
+  const staleDelay = new MacAudioOutput({
+    helperPath: "/helpers/output", platform: "darwin", exists: () => true, startupPrebufferMs: 400, startupDelayMs: 200,
+    probeHelper: async () => ({ ...ready, startupDelayMs: 0 }),
+  });
+  assert.equal((await staleDelay.probe()).ready, false);
+  assert.throws(() => new MacAudioOutput({ helperPath: "/helpers/output", startupPrebufferMs: 399 }), /multiple of 20/);
+});
 
 test("macOS output writes only format-matched framed PCM", async () => {
   {
@@ -82,6 +121,7 @@ test("macOS output writes only format-matched framed PCM", async () => {
         supportsJitterBuffer: true,
         startsWhenQueueFull: true,
         startupPrebufferMs: 500,
+        startupDelayMs: 0,
         queueCapacityFrames: 64,
         deviceUid: "default-device",
         deviceName: "Default output",
@@ -140,6 +180,7 @@ test("macOS output writes only format-matched framed PCM", async () => {
         supportsJitterBuffer: true,
         startsWhenQueueFull: true,
         startupPrebufferMs: 500,
+        startupDelayMs: 0,
         queueCapacityFrames: 64,
         deviceUid: "default-device",
         deviceName: "Default output",
@@ -190,6 +231,7 @@ test("concurrent output probes share one native self-test", async () => {
         supportsJitterBuffer: true,
         startsWhenQueueFull: true,
         startupPrebufferMs: 500,
+        startupDelayMs: 0,
         queueCapacityFrames: 64,
         deviceUid: "default-device",
         deviceName: "Default output",
@@ -221,6 +263,7 @@ test("macOS output binds a requested recording device by stable UID", async () =
         supportsJitterBuffer: true,
         startsWhenQueueFull: true,
         startupPrebufferMs: 500,
+        startupDelayMs: 0,
         queueCapacityFrames: 64,
         deviceUid: "BlackHole2ch_UID",
         deviceName: "BlackHole 2ch",
@@ -276,6 +319,7 @@ test("output lifecycle quiesces faults and retains failed cleanup for retry", as
         supportsJitterBuffer: true,
         startsWhenQueueFull: true,
         startupPrebufferMs: 500,
+        startupDelayMs: 0,
         queueCapacityFrames: 64,
         deviceUid: "default-device",
         deviceName: "Default output",
@@ -313,6 +357,7 @@ test("output lifecycle quiesces faults and retains failed cleanup for retry", as
         supportsJitterBuffer: true,
         startsWhenQueueFull: true,
         startupPrebufferMs: 500,
+        startupDelayMs: 0,
         queueCapacityFrames: 64,
         deviceUid: "default-device",
         deviceName: "Default output",
@@ -360,6 +405,7 @@ test("output lifecycle quiesces faults and retains failed cleanup for retry", as
         supportsJitterBuffer: true,
         startsWhenQueueFull: true,
         startupPrebufferMs: 500,
+        startupDelayMs: 0,
         queueCapacityFrames: 64,
         deviceUid: "default-device",
         deviceName: "Default output",
@@ -410,6 +456,7 @@ test("output lifecycle quiesces faults and retains failed cleanup for retry", as
         supportsJitterBuffer: true,
         startsWhenQueueFull: true,
         startupPrebufferMs: 500,
+        startupDelayMs: 0,
         queueCapacityFrames: 64,
         deviceUid: "default-device",
         deviceName: "Default output",

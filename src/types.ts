@@ -2,6 +2,7 @@ import type { UiLocale } from "./i18n";
 
 export type TabId = "home" | "history" | "settings";
 export type SourceMode = "codex-app-server" | "desktop-application";
+export type VoiceModelId = "seed-vc" | "chatterbox";
 export type RuntimeState = "stopped" | "starting" | "armed" | "engaging" | "running" | "stopping" | "faulted";
 
 export interface OnboardingState {
@@ -20,6 +21,7 @@ export interface Settings {
   sourceMode: SourceMode;
   sourceId: string | null;
   sourceName: string | null;
+  selectedModelId: VoiceModelId;
   selectedVoiceId: string | null;
   selectedVoiceName: string | null;
   retentionHours: 1 | 6 | 24 | 72 | 168 | null;
@@ -32,7 +34,7 @@ export interface Settings {
 
 export type UserSettingKey = Exclude<
   keyof Settings,
-  "windowsManualRouteConfigured"
+  "windowsManualRouteConfigured" | "selectedModelId"
 >;
 
 export interface ReadinessCheck {
@@ -55,15 +57,15 @@ export interface RuntimeSnapshot {
 }
 
 export interface EngineDiagnostics {
-  profile: "seed-vc-tiny-realtime";
+  profile: "seed-vc-tiny-realtime" | "chatterbox-streaming";
   runtimeProfile: string | null;
-  device: "mps" | "cuda" | null;
+  device: "mps" | "cuda" | "mlx" | null;
   backend: string | null;
   workerState: "stopped" | "loading" | "ready";
   active: boolean;
   voiceId: string | null;
-  steps: number;
-  blockMs: number;
+  steps: number | null;
+  blockMs: number | null;
   startupDiscardMs: number;
   convertedBlocks: number;
   loadSeconds: number | null;
@@ -178,6 +180,7 @@ export interface LauncherSnapshot {
   platformAudioSetup: PlatformAudioSetupState;
   engineInstallation: EngineInstallationState;
   engineDiagnostics: EngineDiagnostics;
+  models: { id: VoiceModelId; name: string; releaseYear: number; recommended: boolean; blockMs: number; supported: boolean; installation: EngineInstallationState }[];
   voices: VoicePreset[];
   history: HistoryEntry[];
 }
@@ -222,6 +225,7 @@ export interface VoiceBridge {
   selectSource(source: Pick<AudioSource, "id" | "name"> | null): Promise<Settings>;
   selectSourceMode(mode: SourceMode): Promise<Settings>;
   selectVoice(id: string): Promise<Settings>;
+  selectModel(id: VoiceModelId): Promise<Settings>;
   voiceSample(id: string): Promise<{ voice: VoicePreset; data: Uint8Array; mimeType: string }>;
   openVoiceTerms(id: string): Promise<boolean>;
   listSources(): Promise<{ platform: string; sources: AudioSource[] }>;

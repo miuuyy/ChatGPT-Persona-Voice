@@ -2,6 +2,7 @@
 
 const fs = require("node:fs");
 const { writePrivateFileAtomic } = require("./atomic-file.cjs");
+const { requireVoiceModel } = require("./voice-models.cjs");
 
 const STATE_VERSION = 1;
 const SOURCE_MODES = new Set(["codex-app-server", "desktop-application"]);
@@ -13,6 +14,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   sourceMode: "desktop-application",
   sourceId: null,
   sourceName: null,
+  selectedModelId: "seed-vc",
   selectedVoiceId: "voicevox-shikoku-metan-normal",
   selectedVoiceName: "Shikoku Metan",
   retentionHours: 6,
@@ -56,6 +58,9 @@ function normalizeSettings(value) {
   }
   const sourceMode = value.sourceMode ?? DEFAULT_SETTINGS.sourceMode;
   if (!SOURCE_MODES.has(sourceMode)) throw new Error("Unknown audio source mode");
+  const selectedModelId = value.selectedModelId === undefined
+    ? DEFAULT_SETTINGS.selectedModelId : value.selectedModelId;
+  requireVoiceModel(selectedModelId);
 
   const uiLocale = value.uiLocale === undefined
     ? DEFAULT_SETTINGS.uiLocale
@@ -96,6 +101,7 @@ function normalizeSettings(value) {
     sourceMode,
     sourceId,
     sourceName,
+    selectedModelId,
     selectedVoiceId,
     selectedVoiceName,
     retentionHours,
@@ -131,10 +137,11 @@ function normalizeOnboarding(value = DEFAULT_ONBOARDING) {
   return result;
 }
 
-function defaultState() {
+function defaultState(initialModelId = DEFAULT_SETTINGS.selectedModelId) {
+  requireVoiceModel(initialModelId);
   return {
     version: STATE_VERSION,
-    settings: { ...DEFAULT_SETTINGS },
+    settings: { ...DEFAULT_SETTINGS, selectedModelId: initialModelId },
     onboarding: { ...DEFAULT_ONBOARDING },
   };
 }
@@ -157,13 +164,13 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function createStateStore(filePath) {
+function createStateStore(filePath, { initialModelId = DEFAULT_SETTINGS.selectedModelId } = {}) {
   let state;
   try {
     state = normalizeState(JSON.parse(fs.readFileSync(filePath, "utf8")));
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
-    state = defaultState();
+    state = defaultState(initialModelId);
     writePrivateFileAtomic(filePath, `${JSON.stringify(state, null, 2)}\n`);
   }
 

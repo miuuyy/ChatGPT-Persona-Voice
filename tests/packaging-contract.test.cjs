@@ -35,7 +35,7 @@ test("macOS package declares permissions and both native data-plane helpers", ()
   assert.equal(packageJson.build.extraResources.some((entry) => entry.to === "voices"), true);
   assert.equal(packageJson.build.extraResources.some((entry) =>
     entry.from === "build/updater-runtime" && entry.to === "updater-runtime"), true);
-  for (const destination of ["engine-installer", "engine/seed-vc", "engine/vendor/seed-vc"]) {
+  for (const destination of ["engine-installer", "engine/seed-vc", "engine/vendor/seed-vc", "engine/chatterbox"]) {
     assert.equal(packageJson.build.extraResources.some((entry) => entry.to === destination), true);
   }
   assert.equal(packageJson.build.mac.binaries.includes("Contents/Resources/updater-runtime/bun"), true);

@@ -46,6 +46,10 @@ const {
 const { OBS_RECORDING_DEVICE_UID, createRuntimeAdapters } = require("./runtime-adapters.cjs");
 const { StoppedMutationGate } = require("./stopped-mutation-gate.cjs");
 const { SeedVcEngine, resolveSeedVcPaths } = require("./seed-vc-engine.cjs");
+const { ChatterboxEngine } = require("./chatterbox-engine.cjs");
+const { ChatterboxInstaller } = require("./chatterbox-installer.cjs");
+const { resolveChatterboxPaths } = require("./chatterbox-runtime.cjs");
+const { VoiceModelSelection, initialVoiceModel } = require("./voice-models.cjs");
 const { listAudioSources } = require("./source-discovery.cjs");
 const { requireSourceMode } = require("./source-mode.cjs");
 const { createStateStore } = require("./state-store.cjs");
@@ -445,6 +449,7 @@ async function buildSnapshot() {
     runtime: runtimeSnapshot,
     engineInstallation: engineInstaller.getState(),
     engineDiagnostics: voiceEngine.diagnostics(),
+    models: voiceEngine.list(),
     voices: voiceCatalog.list(),
     history: historyStore.list(),
   };
@@ -504,10 +509,13 @@ function registerIpc() {
     return state.onboarding;
   });
   handle("voice:complete-onboarding", async () => {
-    const state = stateStore.setOnboarding({ complete: true });
-    logger.info("launcher.onboarding_completed");
-    await broadcastSnapshot();
-    return state.onboarding;
+    return stoppedMutationGate.run("complete setup", async () => {
+      await voiceEngine.assertInstalled();
+      const state = stateStore.setOnboarding({ complete: true });
+      logger.info("launcher.onboarding_completed", { modelId: state.settings.selectedModelId });
+      await broadcastSnapshot();
+      return state.onboarding;
+    });
   });
   handle("voice:refresh-readiness", () => refreshReadiness());
   handle("voice:platform-audio-setup-refresh", async () => {
@@ -566,7 +574,7 @@ function registerIpc() {
       const confirmation = await dialog.showMessageBox(mainWindow, {
         type: "warning",
         title: "Remove voice engine?",
-        message: "Remove the local Seed-VC engine package?",
+        message: `Remove the local ${voiceEngine.selected().name} engine package?`,
         detail: "The launcher and voice references stay installed. Reinstalling the engine requires another download.",
         buttons: ["Cancel", "Remove engine"],
         defaultId: 0,
@@ -590,6 +598,7 @@ function registerIpc() {
         "sourceName",
         "selectedVoiceId",
         "selectedVoiceName",
+        "selectedModelId",
         "windowsManualRouteConfigured",
       ].includes(key)) {
         throw new Error(`Use the dedicated operation for setting ${String(key)}`);
@@ -658,6 +667,15 @@ function registerIpc() {
         selectedVoiceId: voice.id,
         selectedVoiceName: voice.name,
       });
+      await runtime.inspect(stateStore.read().settings);
+      await broadcastSnapshot();
+      return stateStore.read().settings;
+    });
+  });
+  handle("voice:select-model", async (_event, id) => {
+    return stoppedMutationGate.run("model selection", async () => {
+      await voiceEngine.select(id, (selectedModelId) => stateStore.setSetting("selectedModelId", selectedModelId));
+      logger.info("engine.model_selected", { modelId: id });
       await runtime.inspect(stateStore.read().settings);
       await broadcastSnapshot();
       return stateStore.read().settings;
@@ -858,7 +876,9 @@ async function start() {
   logger = createLogger(path.join(app.getPath("logs"), "launcher.jsonl"), (record) => send("voice:log", record));
   relayPower = createRelayPowerController(powerSaveBlocker);
   configureSessionSecurity();
-  stateStore = createStateStore(path.join(userDataDirectory, "launcher-state.json"));
+  stateStore = createStateStore(path.join(userDataDirectory, "launcher-state.json"), {
+    initialModelId: initialVoiceModel(),
+  });
   const updaterRuntimePath = app.isPackaged
     ? path.join(process.resourcesPath, "updater-runtime", process.platform === "win32" ? "bun.exe" : "bun")
     : null;
@@ -915,7 +935,7 @@ async function start() {
     productDirectory: PRODUCT_NAME,
   });
   const engineRuntimeRoot = engineStorage.runtimeRoot;
-  voiceEngine = new SeedVcEngine({
+  const seedEngine = new SeedVcEngine({
     paths: resolveSeedVcPaths({
       isPackaged: app.isPackaged,
       resourcesPath: process.resourcesPath,
@@ -926,25 +946,51 @@ async function start() {
     logger,
     onDiagnostics: scheduleDiagnosticsBroadcast,
   });
-  engineInstaller = new EngineInstaller({
-    paths: resolveEngineInstallerPaths({
-      isPackaged: app.isPackaged,
-      resourcesPath: process.resourcesPath,
-      projectRoot,
-      runtimeRoot: engineRuntimeRoot,
-      pythonRoot: engineStorage.pythonRoot,
-      cacheRoot: engineStorage.cacheRoot,
-      tempRoot: engineStorage.tempRoot,
-    }),
-    logger,
-    publish: () => {
-      void broadcastSnapshot().catch((error) => {
-        logger.warn("engine.installation_broadcast_failed", {
-          message: error instanceof Error ? error.message : String(error),
-        });
-      });
-    },
+  const seedInstallerPaths = resolveEngineInstallerPaths({
+    isPackaged: app.isPackaged,
+    resourcesPath: process.resourcesPath,
+    projectRoot,
+    runtimeRoot: engineRuntimeRoot,
+    pythonRoot: engineStorage.pythonRoot,
+    cacheRoot: engineStorage.cacheRoot,
+    tempRoot: engineStorage.tempRoot,
   });
+  const publishInstallation = () => {
+    if (!runtime) return;
+    void broadcastSnapshot().catch((error) => {
+      logger.warn("engine.installation_broadcast_failed", {
+        message: error instanceof Error ? error.message : String(error),
+      });
+    });
+  };
+  const seedInstaller = new EngineInstaller({
+    paths: seedInstallerPaths, logger, publish: publishInstallation,
+  });
+  const chatterboxPaths = resolveChatterboxPaths({
+    isPackaged: app.isPackaged, resourcesPath: process.resourcesPath, projectRoot,
+    runtimeRoot: path.join(path.dirname(engineRuntimeRoot), "chatterbox"),
+  });
+  const chatterboxEngine = new ChatterboxEngine({
+    paths: chatterboxPaths, voiceCatalog, logger, onDiagnostics: scheduleDiagnosticsBroadcast,
+  });
+  const chatterboxInstaller = new ChatterboxInstaller({
+    paths: chatterboxPaths, uvPath: seedInstallerPaths.uvPath, logger, publish: publishInstallation,
+  });
+  voiceEngine = new VoiceModelSelection({
+    engines: { "seed-vc": seedEngine, chatterbox: chatterboxEngine },
+    installers: { "seed-vc": seedInstaller, chatterbox: chatterboxInstaller },
+    getSettings: () => stateStore.read().settings,
+  });
+  engineInstaller = {
+    getState: () => voiceEngine.installer().getState(),
+    install: () => voiceEngine.installer().install(),
+    remove: () => voiceEngine.installer().remove(),
+    cancel: () => voiceEngine.installer().cancel(),
+    shutdown: async () => {
+      await seedInstaller.shutdown();
+      await chatterboxInstaller.shutdown();
+    },
+  };
   historyStore = createHistoryStore(path.join(userDataDirectory, "history"), {
     onRecovery: (event) => logger.warn("history.index_recovered", event),
   });
@@ -969,7 +1015,14 @@ async function start() {
   let audioOutput = null;
   if (process.platform === "darwin") {
     processRoute = new MacProcessRoute({ helperPath: captureHelperPath, logger });
-    audioOutput = new MacAudioOutput({ helperPath: outputHelperPath, logger });
+    const modelOutputs = Object.fromEntries(voiceEngine.models.map((model) => [model.id,
+      new MacAudioOutput({ helperPath: outputHelperPath, logger,
+        startupPrebufferMs: model.startupPrebufferMs, startupDelayMs: model.startupDelayMs }),
+    ]));
+    audioOutput = {
+      probe: (deviceUid) => modelOutputs[voiceEngine.selected().id].probe(deviceUid),
+      prepare: (config, format, onError) => modelOutputs[voiceEngine.selected(config).id].prepare(config, format, onError),
+    };
   } else if (process.platform === "linux") {
     processRoute = new LinuxProcessRoute({ helperPath: captureHelperPath, logger });
     audioOutput = new LinuxAudioOutput({ helperPath: outputHelperPath, logger });

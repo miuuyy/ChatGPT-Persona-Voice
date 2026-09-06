@@ -27,7 +27,7 @@ and performance gates remain in [Release engineering](RELEASE.md).
 | Electron main | Validated IPC, settings, discovery, pipeline lifecycle, history, logs | Resolves filesystem paths and child processes |
 | Platform capture/route helper | Process-scoped route ownership, suppression proof, CPV1 PCM | Native child process; Core Audio, PipeWire, or WASAPI |
 | VB-CABLE Input on Windows | Separately installed virtual endpoint used as the suppressing boundary | Third-party signed driver from VB-Audio; never bundled by Persona Voice |
-| Seed-VC worker | Local model load, streaming conversion, SOLA state | Separate GPL Python process over CPVE pipes |
+| Selected voice worker | Local model load, reference conditioning, streaming conversion and overlap state | Separate CPVE Python process: GPL Seed-VC or MIT Chatterbox/MLX |
 | Platform output helper | Exact-format converted playback and bounded buffering | Native child process over CPV1 |
 
 The preload exposes a narrow IPC API. Renderer navigation is limited to the local development origin
@@ -46,7 +46,8 @@ Core Audio process tap and aggregate device, verifies the format and first frame
 active tap, and returns to `armed`.
 
 Transparent process taps require macOS 14.2 or newer; the qualified realtime engine requires Apple
-Silicon MPS. This path has been manually accepted live.
+Silicon (MPS for Seed-VC, MLX for Chatterbox). This path has been manually accepted live;
+Chatterbox acceptance currently covers the owner's English comparison on one Mac.
 
 ### Linux: owned PipeWire/WirePlumber ingress
 
@@ -112,10 +113,12 @@ platform route adapter
 Electron conversion queue (1,000 ms target; 6,000 ms safety bound)
         │
         ▼
-Seed-VC adapter: discard first 3 s → accumulate 300 ms → CPVE convert
+Selected CPVE adapter
+  Seed-VC: discard first 3 s → accumulate 300 ms → convert
+  Chatterbox: accumulate 640 ms + 240 ms lookahead → convert
         │
         ▼
-22.05 kHz mono f32le, split into 20 ms frames
+22.05 kHz (Seed-VC) / 24 kHz (Chatterbox) mono f32le → 20 ms frames
         │
         ├── Core Audio / PipeWire / WASAPI native output
         ├── optional converted-only WAV history
@@ -137,7 +140,7 @@ length. No platform or engine path guesses an undeclared format.
 
 1. Probe source, route/suppression, engine, and output capabilities.
 2. Describe the source's exact PCM format.
-3. Prepare and warm the matching MPS or CUDA engine profile.
+3. Prepare and warm the selected MPS, MLX or CUDA engine profile.
 4. Acquire the platform route guard and require an explicit armed/readiness contract.
 5. Open capture callbacks and transition into the platform's idle/armed state.
 
@@ -166,9 +169,10 @@ After proof:
 3. Electron prepares exact-format native output.
 4. The runtime transitions to `running` and accepts capture frames.
 5. Seed-VC discards the first three seconds for the newly prepared/reset session, then converts
-   fixed 300 ms blocks into 20 ms output frames.
+   fixed 300 ms blocks into 20 ms output frames. Chatterbox starts immediately accumulating
+   bounded 640 ms blocks with 240 ms lookahead; it never waits for an utterance endpoint.
 
-Reference conditioning has two independent bounds: a 3-second acoustic prompt used in every
+Seed-VC reference conditioning has two independent bounds: a 3-second acoustic prompt used in every
 diffusion block and a one-time CAMPPlus speaker embedding from up to 17 seconds of the reference.
 Frames received before `running` are not replayed as unconverted output.
 
@@ -218,17 +222,31 @@ armed / engaging / running ─────────→ stopping → stopped
 | macOS/Linux native capture queue | 64 slots |
 | JavaScript queued source duration | 6,000 ms safety bound |
 | Seed-VC source block | 300 ms |
+| Chatterbox source block / lookahead | 640 / 240 ms |
 | Seed-VC conversion request timeout | 8,000 ms |
 | Seed-VC control timeout | 5,000 ms |
 | Engine output frame | 20 ms |
 | macOS/Linux maximum output frame | 40 ms |
-| macOS/Linux output queue | 64 frames/buffers; 500 ms startup target |
+| macOS/Linux output queue | 64 frames/buffers; Seed-VC 500 ms startup target |
+| macOS Chatterbox output startup | 400 ms prebuffer + 200 ms clock reserve |
 | Windows converted output | 80 ms maximum frame; 500 ms startup; 1,500 ms capacity |
 | Windows standby output | 40 ms startup; 250 ms capacity |
 
 These are implementation limits, not an end-to-end latency SLO. They do not include capture, the
-three-second discard, scheduling, or hardware playback. `500 ms` is an output prebuffer target, not
+Seed-VC three-second discard, scheduling, or hardware playback. `500 ms` is an output prebuffer target, not
 proof of 500 ms user-visible latency.
+
+## Model selection and first-run setup
+
+`VoiceModelSelection` owns the fixed catalog, worker and installer selection, diagnostics, and
+explicit shutdown. `voice:select-model` holds the stopped-state mutation gate until the previous
+worker closes and the new setting is persisted. Failure never selects a different model. The
+same choice configures native output buffering. Source, voice, and history remain independent.
+
+First-run setup downloads one chosen model. The completion IPC revalidates that model; it cannot
+skip setup or require both packages. Fresh Apple Silicon state defaults to Chatterbox, while
+existing and legacy selections remain unchanged. The second model can be installed or removed
+from Settings → Voice model, with isolated runtime/Python/cache ownership.
 
 ## Persistence and privacy
 
@@ -255,7 +273,8 @@ Implemented in the development tree:
 - macOS Core Audio and Linux PipeWire/WirePlumber relay adapters, plus the packaged Windows
   WASAPI/VB-CABLE path awaiting broader physical-host acceptance;
 - native capture/output helpers and CPV1 framing on all three target platforms;
-- pinned MPS and x64 CUDA 13.0 Seed-VC profiles, CPVE worker, and verified source/in-app installer;
+- pinned MPS and x64 CUDA 13.0 Seed-VC profiles plus Apple Silicon MLX Chatterbox, CPVE workers,
+  separate verified installers and first-run/settings model selection;
 - twelve integrity-checked VOICEVOX references, one community JARVIS reference, and one disclosed
   upstream Seed-VC Donald Trump AI-likeness reference;
 - converted-only history and the optional macOS BlackHole mirror;

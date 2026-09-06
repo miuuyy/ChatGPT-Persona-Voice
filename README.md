@@ -15,25 +15,34 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/app-desktop-black?logo=electron" alt="Desktop app">
   <img src="https://img.shields.io/badge/inference-local-10a37f" alt="Local inference">
-  <img src="https://img.shields.io/badge/engine-Seed--VC-7c5cff" alt="Seed-VC engine">
+  <img src="https://img.shields.io/badge/models-Chatterbox%20%2B%20Seed--VC-7c5cff" alt="Chatterbox and Seed-VC models">
 </p>
 
 <p align="center">
-  <img src="assets/architecture-visual-v2.png" alt="ChatGPT audio flowing through a local Seed-VC layer to the speaker" width="1200">
+  <img src="assets/architecture-models.svg" alt="ChatGPT and Codex audio routed through the selected local voice model" width="1200">
 </p>
 
 Persona Voice replaces the spoken output of ChatGPT and Codex with a voice you choose. The
 conversation and controls remain in the source app, while conversion runs locally on your device.
 Output quality and timing vary with the hardware, source audio, and selected reference.
 
-> [!IMPORTANT]
-> Voice conversion currently performs best with Japanese and Chinese source speech. English and
-> other languages work, but pronunciation and timbre consistency can vary. Contributions that
-> improve multilingual quality, reference preparation, and engine profiles are especially welcome.
+## Voice models (unreleased)
+
+Download one model during first-run setup, then add the other later in **Settings → Voice model**.
+Existing installations keep their current model; new Apple Silicon installs recommend Chatterbox.
+
+| Model | Released | Speech and performance |
+| --- | --- | --- |
+| Seed-VC Tiny | 2024 | Best suited to Japanese and Chinese in our comparisons; 300 ms streaming blocks. Apple Silicon and x64 NVIDIA CUDA. |
+| Chatterbox | 2025 | Recommended for English and other languages; English live-tested. 640 ms streaming blocks on Apple Silicon. |
+
+On the same English recording, Chatterbox took 29% less processing time on our Apple M4 Pro.
+Quality varies by language and voice. See [model comparison and sources](docs/VOICE_MODELS.md)
+for measurements, startup delay, storage requirements, and availability.
 
 ## Why Persona Voice
 
-- **Near-real-time conversion.** The current Seed-VC profile processes speech in short blocks and
+- **Near-real-time conversion.** Both models process speech in bounded blocks and
   streams converted audio as it becomes available. Actual latency varies by hardware and route.
 - **The original voice is replaced, not layered.** Persona Voice suppresses the selected app's
   original playback and sends the converted voice to your speakers.
@@ -54,7 +63,7 @@ ChatGPT / Codex app
         ▼
 Persona Voice audio route
         ▼
-Local Seed-VC conversion
+Selected local model: Chatterbox / Seed-VC
         │
         ▼
 Speakers
@@ -78,7 +87,7 @@ Download the latest macOS, Windows, or Linux build from [Releases](https://githu
 Windows setup links to the official [VB-CABLE](https://vb-audio.com/Cable/) download; install it
 separately, restart Windows, and follow the in-app Volume Mixer step.
 
-1. Launch Persona Voice and complete the guided engine and system-audio setup.
+1. Launch Persona Voice, choose and download one voice model, and complete system-audio setup.
 2. Open ChatGPT or Codex, then choose the source app and target voice in Persona Voice.
 3. Press **Start voice**, then enter voice mode in ChatGPT or Codex.
 
@@ -90,19 +99,18 @@ See [Platform status](#platform-status) for requirements and
 Requirements:
 
 - Git, Bun 1.3.14, Node.js 22.12+, and [`uv`](https://docs.astral.sh/uv/);
-- one qualified host profile: Apple Silicon macOS 14.2+ with MPS, x64 Linux with a supported
+- one qualified host profile: Apple Silicon macOS 14.2+ with MPS/MLX, x64 Linux with a supported
   NVIDIA CUDA driver, or x64 Windows build 20348+ with a supported NVIDIA CUDA driver;
 - the platform native toolchain: Xcode Command Line Tools on macOS, a C++20 compiler plus
   `pkg-config`/PipeWire development headers on Linux, or MSVC/CMake/Windows SDK on Windows;
-- engine space: approximately 2.5 GiB installed and 6 GiB free on macOS, 9 GiB installed and
-  15 GiB free on Windows, or 11 GiB installed and 15 GiB free on Linux.
+- Chatterbox space (macOS): approximately 4 GiB installed, 8 GiB free for setup. Seed-VC space:
+  2.5 GiB / 6 GiB free on macOS, 9 GiB / 15 GiB free on Windows, 11 GiB / 15 GiB free on Linux.
 - Windows also requires the official VB-CABLE driver, installed separately from VB-Audio.
 
 ```bash
 git clone --recurse-submodules https://github.com/miuuyy/ChatGPT-Persona-Voice.git
 cd ChatGPT-Persona-Voice
 bun install --frozen-lockfile
-bun run setup:engine
 bun run dev
 ```
 
@@ -113,7 +121,7 @@ platform setup, native build commands, and contributor verification.
 
 | Platform | Availability | Requirements and current limits |
 | --- | --- | --- |
-| Apple Silicon macOS 14.2+ | Preview package available | MPS; production signing/notarization and clean-machine qualification remain |
+| Apple Silicon macOS 14.2+ | Preview package available | MPS/MLX; production signing/notarization and clean-machine qualification remain |
 | Linux x64 + NVIDIA | Preview package available | CUDA 13.0, PipeWire, and WirePlumber; broader distribution coverage remains |
 | Windows x64 + NVIDIA, build 20348+ | Preview package available | CUDA 13.0 and separately installed VB-CABLE; physical-host feedback is welcome |
 | Other hosts | Unavailable | Unsupported |

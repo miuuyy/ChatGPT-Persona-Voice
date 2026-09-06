@@ -53,6 +53,25 @@ Upstreams:
 - <https://github.com/facebook/react/tree/v19.2.8/packages/react-dom>
 - <https://github.com/facebook/react/tree/v19.2.8/packages/scheduler>
 
+## Chatterbox streaming engine
+
+The separately installed engine under `engine/chatterbox/` uses Resemble AI Chatterbox S3Gen
+weights and model operations, with MLX-Audio modules for Metal execution. Exact model hashes,
+source revisions, and the measured Python dependency set are recorded in that engine's model
+and requirements locks. The application offers it as a separately installed built-in model on
+Apple Silicon macOS; it is not downloaded unless selected for installation.
+
+- Chatterbox source: <https://github.com/resemble-ai/chatterbox>, revision
+  `5de7a54aa4e5e2baadb0182dde554908b48b85c2`; MIT, Copyright (c) 2025 Resemble AI.
+  The upstream text is in `third_party_licenses/CHATTERBOX-LICENSE`.
+- MLX-Audio source: <https://github.com/Blaizzy/mlx-audio>, revision
+  `41537ec5cf79bcf731a0dd6749cac12ab554a691`; MIT, Copyright (c) 2024 Prince Canuma.
+  The upstream text is in `third_party_licenses/MLX-AUDIO-LICENSE`.
+- The original PerTh watermark is retained through `resemble-perth` at revision
+  `ff1c8ac55a976971245cdd53c18d6131ca00d993` of <https://github.com/resemble-ai/Perth>.
+
+Local comparison audio and private target references are excluded from packaged assets.
+
 ## Seed-VC inference sidecar and model artifacts
 
 The separate Python inference process under `engine/seed-vc` uses the Seed-VC source pinned at

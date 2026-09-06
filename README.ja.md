@@ -15,25 +15,34 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/app-desktop-black?logo=electron" alt="デスクトップアプリ">
   <img src="https://img.shields.io/badge/inference-local-10a37f" alt="Local inference">
-  <img src="https://img.shields.io/badge/engine-Seed--VC-7c5cff" alt="Seed-VC engine">
+  <img src="https://img.shields.io/badge/models-Chatterbox%20%2B%20Seed--VC-7c5cff" alt="Chatterbox and Seed-VC models">
 </p>
 
 <p align="center">
-  <img src="assets/architecture-visual-v2.png" alt="ChatGPT の音声がローカル Seed-VC レイヤーを経由してスピーカーへ流れる構成" width="1200">
+  <img src="assets/architecture-models.svg" alt="選択したローカル音声モデルで ChatGPT と Codex の声を変換" width="1200">
 </p>
 
 Persona Voice は、ChatGPT と Codex の読み上げ音声を選んだ声に置き換えるデスクトップ
 アプリです。会話と操作は元のアプリに残り、音声変換はこのデバイス上で実行されます。
 品質とタイミングは、ハードウェア、入力音声、選択した参照音声によって変わります。
 
-> [!IMPORTANT]
-> 現在の音声変換は、日本語と中国語の入力音声で最も良い結果が得られます。英語やその他の
-> 言語も動作しますが、発音や声質の一貫性には差が出ることがあります。多言語品質、参照音声
-> の準備、エンジンプロファイルを改善するコントリビューションを特に歓迎します。
+## 音声モデル（未リリース）
+
+初回設定ではモデルを1つダウンロードします。もう一方は後から **設定 → 音声モデル** で
+追加できます。既存の選択は保持され、新しい Apple Silicon 環境では Chatterbox を推奨します。
+
+| モデル | 公開年 | 音声と性能 |
+| --- | --- | --- |
+| Seed-VC Tiny | 2024 | このアプリの比較では日本語と中国語に適しています。300 ms ブロック。Apple Silicon と x64 NVIDIA CUDA に対応。 |
+| Chatterbox | 2025 | 英語やその他の言語向けに推奨。英語のライブ音声で確認済み。Apple Silicon で 640 ms ブロックを処理します。 |
+
+同じ英語音声を Apple M4 Pro で比較すると、Chatterbox の処理時間は29%短くなりました。
+品質は言語や声によって異なります。測定条件、開始遅延、必要容量、公開年の出典は
+[モデル比較](docs/VOICE_MODELS.md)を参照してください。
 
 ## Persona Voice を使う理由
 
-- **ほぼリアルタイムの変換。** 現在の Seed-VC プロファイルは音声を短いブロックで
+- **ほぼリアルタイムの変換。** どちらのモデルも音声を一定長のブロックで
   処理し、変換済み音声を準備でき次第ストリーミングします。実際の遅延はハードウェアと
   音声経路によって異なります。
 - **元の声へ重ねず、置き換える。** Persona Voice は選択アプリの元の再生音を
@@ -54,7 +63,7 @@ ChatGPT / Codex アプリ
         ▼
 Persona Voice の音声経路
         ▼
-ローカル Seed-VC 変換
+選択したローカルモデル：Chatterbox / Seed-VC
         │
         ▼
 スピーカー
@@ -79,7 +88,7 @@ Windows、Linux 版をダウンロードできます。Windows の設定画面�
 [VB-CABLE](https://vb-audio.com/Cable/) を開き、別途インストールして Windows を再起動した後、
 アプリ内の音量ミキサー手順に従ってください。
 
-1. Persona Voice を起動し、案内に従ってエンジンとシステム音声を設定します。
+1. Persona Voice を起動し、モデルを1つ選んでダウンロードし、システム音声を設定します。
 2. ChatGPT または Codex を開き、Persona Voice で対象アプリと変換先の声を選びます。
 3. **音声を開始** を押し、ChatGPT または Codex で音声モードを開始します。
 
@@ -91,13 +100,14 @@ Windows、Linux 版をダウンロードできます。Windows の設定画面�
 必要なもの：
 
 - Git、Bun 1.3.14、Node.js 22.12+、[`uv`](https://docs.astral.sh/uv/)
-- 対象となるホストプロファイルのいずれか：MPS を搭載した Apple Silicon macOS 14.2+、
+- 対象となるホストプロファイルのいずれか：MPS/MLX を搭載した Apple Silicon macOS 14.2+、
   対応 NVIDIA CUDA ドライバーを備えた x64 Linux、または Windows build 20348+ x64
   と対応 NVIDIA CUDA ドライバー
 - 各 OS のネイティブツールチェーン：macOS の Xcode Command Line Tools、Linux の
   C++20 コンパイラーと `pkg-config`／PipeWire 開発ヘッダー、または Windows の
   MSVC／CMake／Windows SDK
-- エンジン容量：macOS はインストール約 2.5 GiB・空き 6 GiB、Windows は約 9 GiB・
+- Chatterbox は macOS でインストール約 4 GiB・空き 8 GiB が必要です。
+- Seed-VC の容量：macOS はインストール約 2.5 GiB・空き 6 GiB、Windows は約 9 GiB・
   空き 15 GiB、Linux は約 11 GiB・空き 15 GiB
 - Windows では、VB-Audio 公式の VB-CABLE ドライバも別途インストールする必要があります。
 
@@ -105,7 +115,6 @@ Windows、Linux 版をダウンロードできます。Windows の設定画面�
 git clone --recurse-submodules https://github.com/miuuyy/ChatGPT-Persona-Voice.git
 cd ChatGPT-Persona-Voice
 bun install --frozen-lockfile
-bun run setup:engine
 bun run dev
 ```
 
@@ -117,7 +126,7 @@ Linux のソース実行には PipeWire と WirePlumber も必要です。プラ
 
 | プラットフォーム | 入手方法 | 必要条件と現在の制限 |
 | --- | --- | --- |
-| Apple Silicon macOS 14.2+ | プレビューパッケージあり | MPS。本番署名／公証とクリーンマシン検証は未完了 |
+| Apple Silicon macOS 14.2+ | プレビューパッケージあり | MPS/MLX。本番署名／公証とクリーンマシン検証は未完了 |
 | Linux x64 + NVIDIA | プレビューパッケージあり | CUDA 13.0、PipeWire、WirePlumber。より広いディストリビューション対応は未検証 |
 | Windows x64 + NVIDIA、build 20348+ | プレビューパッケージあり | CUDA 13.0 と別途インストールした VB-CABLE。実機フィードバックを歓迎 |
 | その他のホスト | 入手不可 | 非対応 |

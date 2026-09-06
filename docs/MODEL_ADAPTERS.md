@@ -2,8 +2,9 @@
 
 This document defines the engineering bar for another voice-conversion backend. It is a guide for
 repository contributors, not a stable plugin API. Today, adapters are wired in Electron main and
-the only implemented engine is the bundled Seed-VC worker, with explicit Apple MPS and Windows/Linux
-x64 NVIDIA CUDA profiles.
+the implemented engines are Seed-VC Tiny (Apple MPS and Windows/Linux x64 NVIDIA CUDA) and
+Chatterbox (Apple Silicon MLX). Their fixed model catalog and isolated installers are internal
+contracts; see [Voice models](VOICE_MODELS.md).
 
 ## Boundary
 
@@ -92,7 +93,7 @@ Model installation must be explicit and reproducible:
 6. keep the previous valid installation until the new one is proven, if updates are supported;
 7. support deterministic removal without deleting unrelated user data.
 
-The Seed-VC adapter implements this contract in the source setup and cross-platform packaged engine
+The Seed-VC and Chatterbox adapters implement this contract in source and packaged engine
 installer for each qualified host profile.
 New adapters must preserve the same explicit network/license disclosure, resumable staging,
 verification-before-publication, interrupted-publication recovery, and scoped removal behavior.

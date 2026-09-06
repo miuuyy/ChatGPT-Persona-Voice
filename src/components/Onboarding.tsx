@@ -4,6 +4,7 @@ import {
   formatMessage,
   localeOptions,
   messagesFor,
+  I18nProvider,
 } from "../i18n";
 import type { UiLocale } from "../i18n";
 import type {
@@ -14,6 +15,7 @@ import type {
   VoiceBridge,
 } from "../types";
 import { errorMessage, formatBytes } from "../lib/presentation";
+import { ModelSelector } from "./ModelSelector";
 
 type OnboardingStep = "language" | "support" | "platform-audio" | "engine";
 type PlatformAudioAction = "refresh" | "install" | "activate";
@@ -44,6 +46,7 @@ export function Onboarding({
     | "audio-install"
     | "audio-activate"
     | "install"
+    | "model"
     | "cancel"
     | "complete"
     | null
@@ -164,7 +167,7 @@ export function Onboarding({
   }
 
   const engine = snapshot.engineInstallation;
-  const engineDevice = snapshot.app.platform === "darwin" ? "Apple MPS" : "NVIDIA CUDA";
+  const selectedModel = snapshot.models.find((model) => model.id === snapshot.settings.selectedModelId)!;
   const canInstall = engine.status === "idle" || engine.status === "error";
   const isLinux = snapshot.app.platform === "linux";
   const isWindows = snapshot.app.platform === "win32";
@@ -196,7 +199,7 @@ export function Onboarding({
           : messages!.onboarding.engineStep;
 
   return (
-    <main className="onboarding-screen" data-platform={snapshot.app.platform}>
+    <main className="onboarding-screen" data-platform={snapshot.app.platform} data-step={step}>
       <header className="onboarding-titlebar draggable">
         <div className="onboarding-brand no-drag">
           <span><VoiceMark /></span>
@@ -330,10 +333,18 @@ export function Onboarding({
             <h1>{messages!.onboarding.engineTitle}</h1>
             <p>{messages!.onboarding.engineBody}</p>
 
+            <I18nProvider locale={locale!}>
+              <ModelSelector context="onboarding" snapshot={snapshot} busy={busy !== null} onSelect={(id) => {
+                setBusy("model");
+                setError(null);
+                void bridge.selectModel(id).catch((cause) => setError(errorMessage(cause))).finally(() => setBusy(null));
+              }} />
+            </I18nProvider>
+
             <div className={`onboarding-engine is-${engine.status}`}>
               <span className="onboarding-engine-mark"><Icon name="sparkles" /></span>
               <div className="onboarding-engine-copy">
-                <strong>Seed-VC tiny · {engineDevice}</strong>
+                <strong>{selectedModel.name}</strong>
                 <p>{engine.detail}</p>
                 <small>
                   {engine.status === "ready"
@@ -368,7 +379,7 @@ export function Onboarding({
               <span><Icon name="shield" /> {messages!.onboarding.verifiedBeforeUse}</span>
             </div>
             <small className="onboarding-honesty">
-              {messages!.onboarding.engineTerms}
+              {selectedModel.id === "chatterbox" ? messages!.models.chatterboxDownloadNotice : messages!.onboarding.engineTerms}
             </small>
           </>
         )}
@@ -473,19 +484,9 @@ export function Onboarding({
                   ? messages!.onboarding.engineReady
                   : engine.status === "installing"
                     ? engine.detail
-                    : messages!.onboarding.setupLaterHint}
+                    : messages!.onboarding.chooseModelHint}
               </span>
               <div className="onboarding-footer-actions">
-                {engine.status !== "ready" && engine.status !== "installing" ? (
-                  <button
-                    className="button-secondary"
-                    disabled={busy !== null}
-                    onClick={() => void complete()}
-                    type="button"
-                  >
-                    {messages!.onboarding.setUpLater}
-                  </button>
-                ) : null}
                 {engine.status === "installing" ? (
                   <button
                     className="button-secondary"
@@ -523,7 +524,7 @@ export function Onboarding({
                           : messages!.onboarding.retrySetup
                         : engine.resumable
                           ? messages!.onboarding.resumeDownload
-                          : messages!.onboarding.installEngine}
+                          : formatMessage(messages!.models.installModel, { model: selectedModel.name })}
                   </button>
                 )}
               </div>

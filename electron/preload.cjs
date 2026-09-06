@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld("codexPersonaVoice", {
   selectSource: (source) => ipcRenderer.invoke("voice:select-source", source),
   selectSourceMode: (mode) => ipcRenderer.invoke("voice:select-source-mode", mode),
   selectVoice: (id) => ipcRenderer.invoke("voice:select-voice", id),
+  selectModel: (id) => ipcRenderer.invoke("voice:select-model", id),
   voiceSample: (id) => ipcRenderer.invoke("voice:voice-sample", id),
   openVoiceTerms: (id) => ipcRenderer.invoke("voice:open-voice-terms", id),
   listSources: () => ipcRenderer.invoke("voice:list-sources"),

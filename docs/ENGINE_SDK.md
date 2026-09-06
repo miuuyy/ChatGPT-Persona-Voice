@@ -3,6 +3,10 @@
 Status: design plan only. The repository does not ship an SDK, registry, dynamic adapter loader, or
 compatibility guarantee for third-party engines.
 
+The launcher offers two built-in models: Seed-VC Tiny and streaming Chatterbox (Apple Silicon).
+Selection and separate installation use fixed application-owned adapters. This does not qualify
+the proposed third-party SDK.
+
 ## Goal
 
 A future SDK should let a separately maintained local conversion engine integrate without gaining

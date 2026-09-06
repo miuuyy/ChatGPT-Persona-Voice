@@ -221,7 +221,7 @@ export function HomePage({
               {!runtime.ready && !active ? (
                 <button
                   className="button-secondary"
-                  onClick={() => onOpenSettings("diagnostics")}
+                  onClick={() => onOpenSettings(blockers.some((check) => check.id === "engine") ? "voice" : "diagnostics")}
                   type="button"
                 >
                   {messages.home.reviewSetup}
@@ -237,7 +237,7 @@ export function HomePage({
                   ? formatMessage(messages.home.queued, {
                       milliseconds: new Intl.NumberFormat(locale).format(runtime.queuedAudioMs),
                     })
-                  : messages.home.conversionBlocks}
+                  : snapshot.models.find((model) => model.id === settings.selectedModelId)!.name}
               </span>
             </div>
           </div>

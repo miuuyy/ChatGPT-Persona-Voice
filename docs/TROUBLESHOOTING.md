@@ -83,10 +83,20 @@ If a source reinstall is necessary, quit the app, rename only the dedicated `run
 directory as a backup, rerun setup, and delete the backup only after the new runtime verifies. Do
 not delete a workspace, home directory, or shared cache.
 
+### First-run setup or a second model download
+
+Download one selected model to complete first-run setup. The other model is optional. Later,
+stop the relay before selecting/installing another model in Settings → Voice model. An
+unsupported Chatterbox card means this host is not Apple Silicon; choose Seed-VC on supported
+Windows/Linux CUDA hardware. A 429 response comes from the model host's rate limit; allow its
+retry interval to pass, then resume. Partial downloads remain in owned staging. No access token
+or voice API key is needed for these public checkpoints.
+
 ### Packaged artifact reports a missing engine
 
-Open **Settings → Voice → Install engine**. The minimum free-space checks are 6 GiB on macOS and
-15 GiB on Windows/Linux; estimated installed sizes are 2.5, 9, and 11 GiB respectively. Cancellation
+Open **Settings → Voice model**, select the missing model, and use **Download**. Chatterbox
+requires Apple Silicon and 8 GiB free (about 4 GiB installed). Seed-VC requires 6 GiB free on macOS
+or 15 GiB on Windows/Linux (about 2.5, 9, and 11 GiB installed respectively). Cancellation
 leaves resumable staging. Use **Resume** instead of copying a development venv into app data.
 
 **Remove…** deletes the private runtime, staging, managed Python, and installer cache. It does not

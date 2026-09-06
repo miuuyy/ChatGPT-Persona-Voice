@@ -60,6 +60,11 @@ jobs:
       - name: Run contract tests
         run: bun run test
 
+      - name: Test Chatterbox streaming without model downloads
+        run: |
+          python -m pip install numpy==1.26.4 soxr==1.1.0
+          python scripts/test-chatterbox.py
+
       - name: Typecheck
         run: bun run typecheck
 
@@ -72,6 +77,10 @@ jobs:
       - name: Test macOS and Windows native helpers
         if: runner.os != 'Linux'
         run: bun run test:native
+
+      - name: Test model onboarding and settings through Electron IPC
+        if: runner.os == 'macOS' && runner.arch == 'ARM64'
+        run: bun run test:ui:mac
 
       - name: Package Windows installer for startup verification
         if: runner.os == 'Windows'

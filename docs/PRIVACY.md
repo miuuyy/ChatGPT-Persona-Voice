@@ -45,14 +45,26 @@ storage.
 
 ### Raw source audio
 
+An explicit developer diagnostic is available separately from the application:
+`node scripts/record-live-comparison.cjs --output /absolute/unused/directory`. After the normal
+relay is stopped, this records up to 20 seconds of selected application output and its Chatterbox
+conversion into that private local directory. It does not record microphone input, does not upload
+audio, and restores the source route when it ends. These diagnostic files have no automatic expiry;
+they are created only by explicitly running this command, never by normal Start or history recording.
+Passing `--continuous` explicitly removes both the recording-duration limit and the idle timeout.
+That mode stays ready across voice sessions until interrupted with SIGINT/SIGTERM. PCM and event
+metadata are streamed to disk with bounded memory use; `recording.json` reports the owning PID,
+formats and sample counts. Speech excerpts can then be cut from the saved pair after capture ends.
+
 The platform capture helper sends engaged `f32le` PCM to Electron over stdout using CPV1: a Core
 Audio process tap on macOS, an owned PipeWire ingress monitor on Linux, or process-scoped WASAPI
 loopback on Windows after the selected live sessions are verified on VB-CABLE Input. Electron
-sends exact 300 ms blocks to the Seed-VC worker over CPVE. No raw-audio file or network socket is
+sends bounded blocks to the selected CPVE worker: 300 ms for Seed-VC or 640 ms with 240 ms
+lookahead for Chatterbox. No raw-audio file or network socket is
 part of this path, and logging code records metadata/errors rather than PCM bodies.
 
-The adapter deliberately discards the first three seconds of each newly prepared/reset engine
-session. Discarded audio is not eligible for history or output.
+The Seed-VC adapter deliberately discards the first three seconds of each newly prepared/reset engine
+session. Chatterbox has no startup discard. Discarded audio is not eligible for history or output.
 
 ### Converted audio
 
@@ -163,9 +175,9 @@ data:
    in Volume Mixer; remove VB-CABLE separately only if it is no longer needed by other software;
 4. on Linux, use **Settings → Application → Remove route…** (or
    `node scripts/linux-audio-policy.cjs remove --reload` in development) before deleting the app;
-5. use **Settings → Voice → Remove…** for the packaged engine, then remove the dedicated user-data
+5. use **Settings → Voice model → Remove…** for each installed model, then remove the dedicated user-data
    directory through the operating system if all settings/logs should also be deleted;
-6. developers may separately remove the ignored `runtime/seed-vc/` directory;
+6. developers may separately remove the ignored `runtime/seed-vc/` and `runtime/chatterbox/` directories;
 7. check backups, snapshots, macOS BlackHole/OBS recordings, and exported artifacts separately.
 
 Confirm the exact directory in Settings → Diagnostics before deleting anything. Do not recursively

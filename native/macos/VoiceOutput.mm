@@ -5,6 +5,7 @@
 #include "../shared/NativeProtocol.hpp"
 
 #include <atomic>
+#include <algorithm>
 #include <cerrno>
 #include <chrono>
 #include <condition_variable>
@@ -23,7 +24,7 @@ namespace {
 
 constexpr std::size_t kOutputBufferCount = 64;
 constexpr std::uint32_t kMaximumFrameDurationMs = 40;
-constexpr std::uint32_t kStartupPrebufferMs = 500;
+constexpr std::uint32_t kDefaultStartupPrebufferMs = 500;
 
 std::atomic<bool> stopRequested{false};
 
@@ -243,6 +244,8 @@ int main(int argc, const char* argv[]) {
     bool selfTest = false;
     std::uint32_t sampleRate = 0;
     std::uint32_t channels = 0;
+    std::uint32_t startupPrebufferMs = kDefaultStartupPrebufferMs;
+    std::uint32_t startupDelayMs = 0;
     NSString* requestedDeviceUID = nil;
     for (int index = 1; index < argc; ++index) {
       if (strcmp(argv[index], "--self-test") == 0) selfTest = true;
@@ -254,6 +257,16 @@ int main(int argc, const char* argv[]) {
       } else if (strcmp(argv[index], "--channels") == 0 && index + 1 < argc) {
         if (!parsePositiveInteger(argv[++index], 1, 2, &channels)) {
           emitError(@"Output supports one or two channels.", @"invalid_arguments");
+          return 1;
+        }
+      } else if (strcmp(argv[index], "--startup-prebuffer-ms") == 0) {
+        if (index + 1 >= argc || !parsePositiveInteger(argv[++index], 200, 1000, &startupPrebufferMs) || startupPrebufferMs % 20 != 0) {
+          emitError(@"Startup prebuffer must be a multiple of 20 ms between 200 and 1000 ms.", @"invalid_arguments");
+          return 1;
+        }
+      } else if (strcmp(argv[index], "--startup-delay-ms") == 0) {
+        if (index + 1 >= argc || !parsePositiveInteger(argv[++index], 0, 500, &startupDelayMs)) {
+          emitError(@"Startup delay must be between 0 and 500 ms.", @"invalid_arguments");
           return 1;
         }
       } else if (strcmp(argv[index], "--device-uid") == 0 && index + 1 < argc) {
@@ -289,7 +302,8 @@ int main(int argc, const char* argv[]) {
         @"protocolVersion" : @(cpv::kProtocolVersion),
         @"supportsJitterBuffer" : @YES,
         @"startsWhenQueueFull" : @YES,
-        @"startupPrebufferMs" : @(kStartupPrebufferMs),
+        @"startupPrebufferMs" : @(startupPrebufferMs),
+        @"startupDelayMs" : @(startupDelayMs),
         @"queueCapacityFrames" : @(kOutputBufferCount),
         @"deviceUid" : outputDeviceUID,
         @"deviceName" : outputDeviceName,
@@ -364,7 +378,8 @@ int main(int argc, const char* argv[]) {
       @"queueCapacityFrames" : @(kOutputBufferCount),
       @"supportsJitterBuffer" : @YES,
       @"startsWhenQueueFull" : @YES,
-      @"startupPrebufferMs" : @(kStartupPrebufferMs),
+      @"startupPrebufferMs" : @(startupPrebufferMs),
+      @"startupDelayMs" : @(startupDelayMs),
       @"deviceUid" : outputDeviceUID,
       @"deviceName" : outputDeviceName,
       @"usesDefaultDevice" : @(requestedDeviceUID == nil),
@@ -378,9 +393,12 @@ int main(int argc, const char* argv[]) {
     bool queueEverStarted = false;
     std::uint64_t bufferedSamples = 0;
     std::uint32_t underruns = 0;
+    bool startScheduled = false;
+    std::chrono::steady_clock::time_point startDeadline;
     const std::uint64_t prebufferSamples =
-        (static_cast<std::uint64_t>(sampleRate) * kStartupPrebufferMs + 999) / 1000;
+        (static_cast<std::uint64_t>(sampleRate) * startupPrebufferMs + 999) / 1000;
     auto startBufferedQueue = [&]() -> bool {
+      startScheduled = false;
       status = AudioQueueStart(queue, nullptr);
       if (status != noErr) {
         emitError(@"Unable to start buffered Core Audio output.",
@@ -404,8 +422,18 @@ int main(int argc, const char* argv[]) {
       return true;
     };
     while (!failed && !stopRequested.load(std::memory_order_acquire)) {
+      int pollTimeoutMs = 50;
+      if (startScheduled) {
+        const auto now = std::chrono::steady_clock::now();
+        if (now >= startDeadline) {
+          if (!startBufferedQueue()) { failed = true; break; }
+        } else {
+          const auto remaining = std::chrono::duration_cast<std::chrono::milliseconds>(startDeadline - now).count();
+          pollTimeoutMs = static_cast<int>(std::max<std::int64_t>(1, std::min<std::int64_t>(50, remaining)));
+        }
+      }
       pollfd inputPoll{STDIN_FILENO, static_cast<short>(POLLIN | POLLHUP), 0};
-      const int pollResult = poll(&inputPoll, 1, 50);
+      const int pollResult = poll(&inputPoll, 1, pollTimeoutMs);
       if (pollResult < 0) {
         if (errno == EINTR) continue;
         emitError(@"Unable to wait for converted audio input.", @"output_input_failed");
@@ -465,6 +493,7 @@ int main(int argc, const char* argv[]) {
           break;
         }
         queueRunning = false;
+        startScheduled = false;
         bufferedSamples = 0;
         ++underruns;
         emitJSON(cpv::FrameType::Status, @{
@@ -472,7 +501,7 @@ int main(int argc, const char* argv[]) {
           @"helper" : @"output",
           @"state" : @"rebuffering",
           @"underruns" : @(underruns),
-          @"targetBufferedMs" : @(kStartupPrebufferMs),
+          @"targetBufferedMs" : @(startupPrebufferMs),
         });
       }
 
@@ -491,9 +520,16 @@ int main(int argc, const char* argv[]) {
         bufferedSamples += metadata.samplesPerChannel;
         const bool prebufferReady = bufferedSamples >= prebufferSamples ||
             pool.inFlight() >= kOutputBufferCount;
-        if (prebufferReady && !startBufferedQueue()) {
-          failed = true;
-          break;
+        if (prebufferReady) {
+          // A clock reserve absorbs processing jitter even when the model emits
+          // one large block at a time. Keep reading while that reserve elapses.
+          // A full pool starts immediately to preserve bounded backpressure.
+          if (startupDelayMs == 0 || pool.inFlight() >= kOutputBufferCount) {
+            if (!startBufferedQueue()) { failed = true; break; }
+          } else if (!startScheduled) {
+            startDeadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(startupDelayMs);
+            startScheduled = true;
+          }
         }
       }
     }

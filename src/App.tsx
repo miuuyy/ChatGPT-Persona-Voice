@@ -379,6 +379,7 @@ export function App() {
               onSelectVoice={(id) =>
                 void run(() => bridge.selectVoice(id), messages.app.voiceSelected)
               }
+              onSelectModel={(id) => void run(() => bridge.selectModel(id))}
               onSetting={(key, value) =>
                 void run(() => bridge.setSetting(key, value))
               }
