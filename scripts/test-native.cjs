@@ -58,7 +58,7 @@ function smokeOutput(executable, { prebufferMs = 500, startupDelayMs = 0 } = {})
       typeof messages[0].isAggregateDevice !== "boolean" ||
       messages.slice(1).some((message) => message.type !== "status" ||
         message.helper !== "output" || message.state !== "running")) {
-    throw new Error("Output smoke test returned an invalid readiness frame or deadlocked at queue capacity");
+    throw new Error(`Output smoke test failed (prebuffer=${prebufferMs}, delay=${startupDelayMs}): ${JSON.stringify(messages)}`);
   }
 }
 
