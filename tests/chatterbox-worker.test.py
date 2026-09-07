@@ -30,13 +30,22 @@ class PacketSink:
 
 
 class WorkerTests(unittest.TestCase):
-    def test_runtime_drift_is_rejected_before_loading_models(self):
-        with patch.object(worker.platform, 'python_version', return_value='3.11.13'):
-            with self.assertRaisesRegex(RuntimeError, 'Python 3.11.14'):
-                worker.verify_runtime()
-        with patch.object(worker.importlib.metadata, 'version', return_value='0.0.0'):
+    def test_python_drift_is_rejected_before_checking_dependencies(self):
+        for version in ('3.11.9', '3.11.13', '3.11.16'):
+            with self.subTest(version=version), \
+                    patch.object(worker.platform, 'python_version', return_value=version), \
+                    patch.object(worker.importlib.metadata, 'version') as dependency_version:
+                with self.assertRaisesRegex(RuntimeError, 'Python 3.11.14'):
+                    worker.verify_runtime()
+                dependency_version.assert_not_called()
+
+    def test_dependency_drift_is_rejected_on_qualified_python(self):
+        # The interpreter running these model-free tests need not be the model runtime.
+        with patch.object(worker.platform, 'python_version', return_value='3.11.14'), \
+                patch.object(worker.importlib.metadata, 'version', return_value='0.0.0') as dependency_version:
             with self.assertRaisesRegex(RuntimeError, 'Unqualified runtime version'):
                 worker.verify_runtime()
+            dependency_version.assert_called_once()
 
     def test_binary_roundtrip_and_corrupt_inputs(self):
         pipe = io.BytesIO()
