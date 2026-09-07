@@ -51,13 +51,22 @@ function smokeOutput(executable, { prebufferMs = 500, startupDelayMs = 0 } = {})
   const parser = new NativeFrameParser((message) => messages.push(message));
   parser.push(result.stdout);
   parser.finish();
-  if (messages.length < 1 || messages[0].type !== "ready" || messages[0].helper !== "output" ||
+  validateOutputSmoke(messages, { prebufferMs, startupDelayMs });
+}
+
+function validateOutputSmoke(messages, { prebufferMs, startupDelayMs }) {
+  // 64 single-sample packets play in 2.7 ms. The queue may legitimately drain
+  // before the final packet arrives, so recovery is part of this capacity test.
+  if (messages.length < 2 || messages[0].type !== "ready" || messages[0].helper !== "output" ||
       messages[0].supportsJitterBuffer !== true || messages[0].startsWhenQueueFull !== true ||
       messages[0].startupPrebufferMs !== prebufferMs || messages[0].startupDelayMs !== startupDelayMs || !Array.isArray(messages[0].memberDeviceUids) ||
       messages[0].memberDeviceUidsVerified !== true ||
       typeof messages[0].isAggregateDevice !== "boolean" ||
+      messages.at(-1).state !== "running" ||
       messages.slice(1).some((message) => message.type !== "status" ||
-        message.helper !== "output" || message.state !== "running")) {
+        message.helper !== "output" || !Number.isInteger(message.underruns) || message.underruns < 0 ||
+        (message.state !== "running" && !(message.state === "rebuffering" &&
+          message.underruns > 0 && message.targetBufferedMs === prebufferMs)))) {
     throw new Error(`Output smoke test failed (prebuffer=${prebufferMs}, delay=${startupDelayMs}): ${JSON.stringify(messages)}`);
   }
 }
@@ -119,4 +128,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { selfTest, smokeAtomicSwap, smokeOutput, testNative };
+module.exports = { selfTest, smokeAtomicSwap, smokeOutput, testNative, validateOutputSmoke };
