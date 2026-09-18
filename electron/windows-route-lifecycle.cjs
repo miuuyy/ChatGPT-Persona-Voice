@@ -5,10 +5,10 @@ const MAX_CONVERSION_HANDOFF_QUEUED_MS = 5_000;
 
 const WINDOWS_MANUAL_RESTORE = Object.freeze({
   code: "windows_manual_route_restore_required",
-  title: "Restore the ChatGPT/Codex output route before quitting",
+  title: "Restore the selected application output route before quitting",
   steps: Object.freeze([
     "Open Windows Settings > System > Sound > Volume mixer.",
-    "Set the ChatGPT or Codex Output device back to Default or your physical listening device.",
+    "Set the selected application Output device back to Default or your physical listening device.",
     "Confirm the change in Persona Voice before quitting or uninstalling.",
   ]),
 });
@@ -16,6 +16,7 @@ const WINDOWS_MANUAL_RESTORE = Object.freeze({
 function sourceIdentity(settings) {
   return JSON.stringify({
     sourceMode: settings?.sourceMode ?? null,
+    targetApp: settings?.targetApp ?? null,
     sourceId: settings?.sourceId ?? null,
   });
 }

@@ -7,6 +7,7 @@ import {
   runtimeIsActive,
   sourceLabel,
   statusLabel,
+  targetAppLabel,
   type SettingsSectionId,
 } from "../lib/presentation";
 import { StatusDot } from "../components/AppShell";
@@ -159,7 +160,9 @@ export function HomePage({
     (!runtime.ready && !actionableAsStop);
   const detail =
     runtime.state === "armed"
-      ? messages.home.armedDetail
+      ? formatMessage(messages.home.armedDetail, {
+          app: targetAppLabel(settings.targetApp),
+        })
       : runtime.state === "running"
         ? formatMessage(messages.home.runningDetail, {
             voice: settings.selectedVoiceName || messages.home.selectedVoice,

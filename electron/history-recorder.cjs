@@ -1,6 +1,7 @@
 "use strict";
 
 const { encodePcm16Wav } = require("./wav.cjs");
+const { targetAppLabel } = require("./target-apps.cjs");
 
 const DEFAULT_SILENCE_THRESHOLD = 0.0015;
 const DEFAULT_SILENCE_SPLIT_MS = 650;
@@ -102,7 +103,7 @@ class ConvertedHistoryRecorder {
           samplesPerChannel: 0,
           sourceName: settings.sourceMode === "codex-app-server"
             ? "Codex realtime"
-            : settings.sourceName || "Automatic ChatGPT / Codex",
+            : settings.sourceName || targetAppLabel(settings.targetApp),
           voiceName,
         };
       }

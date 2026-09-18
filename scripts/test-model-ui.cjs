@@ -76,12 +76,16 @@ app.on("browser-window-created", (_event, window) => {
       await delay(100);
     };
     const select = async (id) => {
+      await waitFor("!document.querySelector('.model-selector')?.disabled");
       await click('input[name="voice-model"][value="' + id + '"]');
       await waitFor("document.querySelector('input[name=voice-model]:checked')?.value === " + JSON.stringify(id));
       assert.equal((await snapshot()).settings.selectedModelId, id);
     };
     const record = (name) => report.checks.push(name);
-    const capture = async (name) => fs.writeFileSync(path.join(output, name + ".png"), (await window.webContents.capturePage()).toPNG());
+    const capture = async (name) => {
+      await delay(100);
+      fs.writeFileSync(path.join(output, name + ".png"), (await window.webContents.capturePage()).toPNG());
+    };
     try {
       await waitFor("Boolean(document.querySelector('.language-option'))");
       assert.equal((await snapshot()).settings.selectedModelId, "chatterbox");
@@ -89,12 +93,17 @@ app.on("browser-window-created", (_event, window) => {
       assert.match(denied, /Install Chatterbox/);
       assert.equal((await snapshot()).onboarding.complete, false);
       await click('.language-option[lang="en"]');
+      await waitFor("document.querySelectorAll('.onboarding-actions .onboarding-action').length === 2");
+      await capture("target-app");
+      await click(".onboarding-actions .onboarding-action:nth-child(2)");
+      assert.equal((await snapshot()).settings.targetApp, "grok-bot");
+      assert.equal((await snapshot()).settings.sourceMode, "desktop-application");
       await click(".onboarding-footer .button-primary");
       assert.equal(await evaluate("document.querySelectorAll('.model-option').length"), 2);
       assert.equal(await evaluate("document.querySelectorAll('.onboarding-footer .button-secondary').length"), 0);
       assert.match(await evaluate("document.querySelector('.model-options').textContent"), /2024[\s\S]*2025/);
       await capture("onboarding");
-      record("Fresh install recommends Chatterbox; setup cannot be skipped with no model");
+      record("Fresh install requires a voice-app choice, recommends Chatterbox, and cannot skip model setup");
 
       await evaluate("document.querySelector('input[value=chatterbox]').focus()");
       window.webContents.sendInputEvent({ type: "keyDown", keyCode: "Left" });
@@ -131,6 +140,12 @@ app.on("browser-window-created", (_event, window) => {
 
       await evaluate("[...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Settings').click()");
       await waitFor("Boolean(document.querySelector('.settings-navigation'))");
+      await waitFor("[...document.querySelectorAll('.source-choice')].some(e => /Grok Bot/.test(e.textContent))");
+      await evaluate("[...document.querySelectorAll('.source-choice')].find(e => /^ChatGPT/.test(e.textContent.trim())).click()");
+      await waitFor("window.codexPersonaVoice.snapshot().then(s => s.settings.targetApp === 'chatgpt')");
+      assert.equal((await snapshot()).settings.sourceMode, "desktop-application");
+      await capture("settings-audio");
+      record("Settings switches the persisted voice application without exposing arbitrary processes");
       await evaluate("[...document.querySelectorAll('.settings-navigation button')].find(b => /Voice/.test(b.textContent)).click()");
       await waitFor("Boolean(document.querySelector('.model-selector'))");
       const voiceBefore = (await snapshot()).settings.selectedVoiceId;

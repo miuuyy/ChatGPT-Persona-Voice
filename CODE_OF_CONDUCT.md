@@ -2,7 +2,7 @@
 
 ## Our commitment
 
-We want participation in Codex Persona Voice to be safe, respectful, and technically honest for
+We want participation in Persona Voice to be safe, respectful, and technically honest for
 people of every background and experience level. Contributors, maintainers, reviewers, and users
 are expected to help create an environment free from harassment and intimidation.
 

@@ -81,12 +81,12 @@ The PipeWire helper declares a versioned policy boundary including:
   "supportsPrelinkedIngress": true,
   "supportsDynamicProcessStreams": true,
   "supportsCrashRecovery": true,
-  "policyVersion": 2,
+  "policyVersion": 3,
   "routeOwner": "wireplumber-prelink-policy"
 }
 ```
 
-Ready must identify the exact `chatgpt` or `codex` route and an unmodified armed graph. Engaged
+Ready must identify the exact `chatgpt`, `codex`, or `grok-bot` route and an unmodified armed graph. Engaged
 status additionally requires owned ingress capture, capture-link proof, the matching pre-link
 policy, and verified bypass mute. Audio without that ownership proof is a protocol fault. The
 native helper owns a 64-slot capture queue and reports `suppressionHeld` when bypass restoration is

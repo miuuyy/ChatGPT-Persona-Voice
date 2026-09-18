@@ -4,7 +4,6 @@
     "blocked": "Blocked",
     "unavailable": "Unavailable",
     "backendNeeded": "Backend needed",
-    "notBundled": "Not bundled",
     "setupNeeded": "Setup needed",
     "cancel": "Cancel",
     "cancelling": "Cancelling…",
@@ -18,7 +17,6 @@
     "developmentBuild": "development build"
   },
   "app": {
-    "noSources": "No active application audio sources were found.",
     "routeRestored": "Original audio route restored.",
     "engineInstalled": "Voice engine installed.",
     "engineRemoved": "Voice engine removed.",
@@ -41,13 +39,22 @@
     "updating": "Updating…"
   },
   "onboarding": {
-    "supportStep": "Step 1 of 2",
-    "supportStepWithAudio": "Step 1 of 3",
-    "platformAudioStep": "Step 2 of 3",
-    "engineStep": "Step 2 of 2",
-    "engineStepWithAudio": "Step 3 of 3",
+    "targetStep": "Step 1 of 3",
+    "targetStepWithAudio": "Step 1 of 4",
+    "supportStep": "Step 2 of 3",
+    "supportStepWithAudio": "Step 2 of 4",
+    "platformAudioStep": "Step 3 of 4",
+    "engineStep": "Step 3 of 3",
+    "engineStepWithAudio": "Step 4 of 4",
+    "targetKicker": "VOICE APPLICATION",
+    "targetTitle": "Choose where the voice comes from.",
+    "targetBody": "Persona Voice captures only the application you select. You can switch later in Settings → Audio.",
+    "chatgptTitle": "ChatGPT",
+    "chatgptBody": "Use voice mode in the ChatGPT desktop app, including its Codex experience.",
+    "grokBotTitle": "Grok Bot",
+    "grokBotBody": "Use voice chat with any Bot in the Grok Bot desktop app.",
     "supportKicker": "WELCOME TO PERSONA VOICE",
-    "supportTitle": "Replace ChatGPT and Codex’s output voice.",
+    "supportTitle": "Replace the output voice of ChatGPT, Codex, or Grok Bot.",
     "supportBody": "If you’d like to help more people discover the project, open the repository to leave a star or follow the creator on X.",
     "githubOpened": "GitHub opened",
     "starGithub": "Star on GitHub",
@@ -75,7 +82,7 @@
   "platformAudio": {
     "kicker": "SYSTEM AUDIO ROUTE",
     "linuxTitle": "Set up the guarded Linux audio route.",
-    "linuxBody": "Persona Voice installs one owned per-user PipeWire/WirePlumber policy for ChatGPT and Codex. It never replaces unmanaged policy files.",
+    "linuxBody": "Persona Voice installs one owned per-user PipeWire/WirePlumber policy for ChatGPT, Codex, and Grok Bot. It never replaces unmanaged policy files.",
     "linuxRouteName": "Owned PipeWire / WirePlumber route",
     "linuxOwnedFact": "One-time, per-user installation",
     "linuxRestartFact": "Restarts your user audio session once; the app stays open",
@@ -84,7 +91,7 @@
     "windowsSinkName": "VB-CABLE Input",
     "windowsInstallerFact": "Official VB-Audio driver, installed separately",
     "windowsDownloadStep": "Download VB-CABLE, run its setup as administrator, then restart Windows.",
-    "windowsOpenAppStep": "Open ChatGPT or Codex and start voice or audio playback.",
+    "windowsOpenAppStep": "Open {app} and start voice or audio playback.",
     "windowsAssignStep": "In Windows Volume Mixer, set that app’s Output to CABLE Input.",
     "windowsVerifyStep": "Return here and verify the live route.",
     "statusReady": "Ready",
@@ -114,7 +121,7 @@
     "windowsSettingsNotice": "VB-CABLE is third-party software installed from VB-Audio. Restore each app’s Output to Default in Volume Mixer before uninstalling VB-CABLE."
   },
   "home": {
-    "armedDetail": "Open voice mode in ChatGPT or Codex. The original route stays untouched until the conversation is connected.",
+    "armedDetail": "Open voice mode in {app}. The original route stays untouched until the conversation is connected.",
     "runningDetail": "Realtime audio is being converted to {voice}.",
     "selectedVoice": "the selected voice",
     "startingDetail": "Loading and warming the local voice engine. You can cancel safely while it prepares.",
@@ -123,8 +130,8 @@
     "readyDetail": "Start once, then use voice mode normally. Conversion and history stay on this device.",
     "blockedDetailOne": "{count} check needs attention before the relay can start.",
     "blockedDetailOther": "{count} checks need attention before the relay can start.",
-    "title": "Replace ChatGPT and Codex’s output voice.",
-    "intro": "Choose a voice, start Persona Voice, then use voice mode normally. Conversion runs locally on this device.",
+    "title": "Give ChatGPT, Codex, or Grok Bot any voice.",
+    "intro": "Choose an application and a voice, start Persona Voice, then use voice mode normally. Conversion runs locally on this device.",
     "relayControl": "Voice relay control",
     "selectVoice": "Select a target voice",
     "reviewSetup": "Review setup",
@@ -163,7 +170,7 @@
     "stopVoice": "Stop voice",
     "startVoice": "Start voice",
     "codexSession": "Codex realtime session",
-    "automaticApps": "ChatGPT / Codex automatically"
+    "automaticApps": "Selected voice application"
   },
   "history": {
     "title": "History",
@@ -202,8 +209,8 @@
     "sections": {
       "audio": {
         "label": "Audio",
-        "description": "Choose the application and routing method.",
-        "keywords": "source chatgpt codex capture route application app server input output"
+        "description": "Choose the application whose voice Persona Voice will replace.",
+        "keywords": "source chatgpt codex grok bot capture route application app server input output"
       },
       "voice": {
         "label": "Voice model",
@@ -228,19 +235,12 @@
     },
     "audio": {
       "unavailableTitle": "Transparent relay is not available on this system",
-      "sourceMethod": "Source method",
-      "sourceMethodBody": "Persona Voice must own or suppress the original route before it can play converted audio.",
-      "desktopTitle": "Desktop application",
-      "desktopBody": "Capture ChatGPT or Codex without changing how you use voice mode.",
-      "codexTitle": "Codex realtime session",
-      "codexBody": "Own a Codex realtime PCM stream before hardware playback.",
-      "application": "Application",
-      "applicationBody": "Automatic mode follows matching ChatGPT and Codex process trees.",
-      "pinnedSource": "Pinned to a stable executable or stream identity.",
-      "automaticSource": "Uses every matching realtime voice process.",
-      "automaticApps": "Automatic ChatGPT / Codex",
-      "sourceLabel": "Desktop audio source",
-      "refreshApps": "Refresh applications",
+      "application": "Voice application",
+      "applicationBody": "Choose the desktop application whose spoken output Persona Voice will replace.",
+      "chatgptTitle": "ChatGPT",
+      "chatgptBody": "Follow the ChatGPT desktop process tree, including Codex voice mode.",
+      "grokBotTitle": "Grok Bot",
+      "grokBotBody": "Follow the official Grok Bot desktop process tree and its voice chats.",
       "routeGuarantee": "Route guarantee",
       "routeGuaranteeBody": "Missing capture, suppression, conversion, or output blocks startup.",
       "processCapture": "Process capture",

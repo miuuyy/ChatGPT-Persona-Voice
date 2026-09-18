@@ -1,4 +1,4 @@
-<h1 align="center">Custom output voices for ChatGPT and Codex</h1>
+<h1 align="center">Custom output voices for ChatGPT, Codex, and Grok Bot</h1>
 
 <p align="center">
   <strong>Persona Voice replaces assistant speech locally, with near-real-time playback.</strong>
@@ -23,12 +23,13 @@
 </p>
 
 <p align="center">
-  <img src="assets/architecture-models.svg" alt="ChatGPT and Codex audio routed through the selected local voice model" width="1200">
+  <img src="assets/architecture-models.svg" alt="ChatGPT, Codex, or Grok Bot audio routed through the selected local voice model" width="1200">
 </p>
 
-Persona Voice replaces the spoken output of ChatGPT and Codex with a voice you choose. The
-conversation and controls remain in the source app, while conversion runs locally on your device.
-Output quality and timing vary with the hardware, source audio, and selected reference.
+Persona Voice replaces the spoken output of ChatGPT, Codex, or Grok Bot with a voice you choose.
+Select the source application once; its conversation and controls stay untouched while conversion
+runs locally on your device. Output quality and timing vary with the hardware, source audio, and
+selected reference.
 
 ## Voice models
 
@@ -50,6 +51,8 @@ for measurements, startup delay, storage requirements, and availability.
   streams converted audio as it becomes available. Actual latency varies by hardware and route.
 - **The original voice is replaced, not layered.** Persona Voice suppresses the selected app's
   original playback and sends the converted voice to your speakers.
+- **One relay, multiple voice apps.** Switch between ChatGPT (including Codex) and Grok Bot without
+  changing models, voices, or the local conversion pipeline.
 - **Local inference.** Once installed, conversion runs on your device. No voice API key is required.
 - **Voice presets and local references.** The included catalog contains credited VOICEVOX
   identities and a small set of community/demo references. You can also add an authorized private
@@ -62,7 +65,7 @@ for measurements, startup delay, storage requirements, and availability.
 ## How it works
 
 ```text
-ChatGPT / Codex app
+ChatGPT / Codex or Grok Bot
         │ voice output
         ▼
 Persona Voice audio route
@@ -91,9 +94,9 @@ Download the latest macOS, Windows, or Linux build from [Releases](https://githu
 Windows setup links to the official [VB-CABLE](https://vb-audio.com/Cable/) download; install it
 separately, restart Windows, and follow the in-app Volume Mixer step.
 
-1. Launch Persona Voice, choose and download one voice model, and complete system-audio setup.
-2. Open ChatGPT or Codex, then choose the source app and target voice in Persona Voice.
-3. Press **Start voice**, then enter voice mode in ChatGPT or Codex.
+1. Launch Persona Voice, choose **ChatGPT** or **Grok Bot**, complete system-audio setup, and download one voice model.
+2. Select a target voice and press **Start voice**.
+3. Open voice mode normally in the application you selected.
 
 See [Platform status](#platform-status) for requirements and
 [Troubleshooting](docs/TROUBLESHOOTING.md) if setup is blocked.
@@ -190,6 +193,7 @@ and model files, voice references, and dependencies retain their own licenses an
 
 ## Disclaimer
 
-Codex Persona Voice is independent software and is not affiliated with or endorsed by OpenAI.
-ChatGPT, Codex, and the OpenAI mark belong to OpenAI. This project does not bypass authentication,
-subscriptions, permissions, or access controls.
+Persona Voice is independent software and is not affiliated with or endorsed by OpenAI, xAI, or
+Cursor. ChatGPT, Codex, OpenAI, Grok, Grok Bot, xAI, and Cursor names and marks belong to their
+respective owners. This project does not bypass authentication, subscriptions, permissions, or
+access controls.

@@ -9,7 +9,7 @@ production release.
 | Capability | Apple Silicon macOS 14.2+ | Windows x64 + NVIDIA, build 20348+ | Linux x64 + NVIDIA |
 | --- | --- | --- | --- |
 | Electron application | Implemented | Implemented | Implemented |
-| Source discovery | ChatGPT/Codex process trees | ChatGPT/Codex process trees | PipeWire output streams plus `/proc` process scope |
+| Source discovery | Selected ChatGPT or Grok Bot process tree | Selected ChatGPT or Grok Bot process tree | Selected ChatGPT/Codex or Grok Bot PipeWire stream plus `/proc` scope |
 | Existing-app capture | Core Audio process tap | Process-scoped WASAPI loopback | Native PipeWire capture from owned ingress monitor |
 | Original-route control | `CATapMutedWhenTapped` after first-frame proof | Separately installed VB-CABLE Input; in-app setup verifies explicit per-app assignment, but does not mutate policy | In-app per-user PipeWire/WirePlumber policy setup, owned ingress/bypass, capture and bypass-mute proof |
 | Idle playback | Original route remains attached while the tap is armed | Bounded standby passthrough from the assigned sink to physical output | Owned bypass stream forwards ingress to the current physical default |
@@ -43,9 +43,9 @@ update/uninstall recovery, or representative end-to-end latency qualification.
 
 The implemented Linux x64 path includes:
 
-- `pw-dump` discovery and `/proc`-based ChatGPT/Codex process scoping;
+- `pw-dump` discovery and `/proc`-based ChatGPT/Codex or Grok Bot process scoping;
 - an in-app setup controller and worker for versioned per-user PipeWire/WirePlumber policy files with
-  deterministic ChatGPT/Codex route ids, owned ingress/bypass nodes, atomic managed-file
+  deterministic ChatGPT/Codex/Grok Bot route ids, owned ingress/bypass nodes, atomic managed-file
   replacement/removal, conflict refusal, and user-session reload;
 - native CPV1 PipeWire capture that requires the pre-link policy, verifies owned ingress capture and
   bypass mute before engagement, handles dynamic process streams, and reports rollback uncertainty;
@@ -87,7 +87,8 @@ page but never bundles, downloads, installs, updates, or removes that driver.
 
 The current in-app route helper also has an explicit product limitation: it verifies current live sessions
 but does not assign or restore per-app audio policy, and Windows notifications are not guaranteed to
-arrive before the first audio frame. A run may therefore require the user to assign ChatGPT/Codex to
+arrive before the first audio frame. A run may therefore require the user to assign the selected
+ChatGPT or Grok Bot application to
 `CABLE Input` in **Settings → System → Sound → Volume mixer**, keep standby passthrough active,
 and restore the app to **Default** or the physical device before quit/uninstall. Clean-binary and
 recovery acceptance remain preview-quality until that lifecycle is qualified on more physical hosts.

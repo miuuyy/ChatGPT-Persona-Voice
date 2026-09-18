@@ -6,7 +6,6 @@ import {
   messagesFor,
 } from "./i18n";
 import type {
-  AudioSource,
   HistoryEntry,
   LauncherSnapshot,
   TabId,
@@ -43,8 +42,6 @@ export function App() {
     success: boolean;
   } | null>(null);
   const [pendingActions, setPendingActions] = useState(0);
-  const [sources, setSources] = useState<AudioSource[]>([]);
-  const [sourceLoading, setSourceLoading] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const [playingKey, setPlayingKey] = useState<string | null>(null);
   const audioRef = useRef<{
@@ -196,7 +193,7 @@ export function App() {
         onChange={(onboarding) =>
           setSnapshot((current) => current ? { ...current, onboarding } : current)
         }
-        onLocaleChange={(settings) =>
+        onSettingsChange={(settings) =>
           setSnapshot((current) => current ? { ...current, settings } : current)
         }
         snapshot={snapshot}
@@ -225,25 +222,6 @@ export function App() {
   function openSettings(section: SettingsSectionId) {
     setSettingsSection(section);
     setActiveTab("settings");
-  }
-
-  async function discoverSources() {
-    setSourceLoading(true);
-    setNotice(null);
-    try {
-      const result = await bridge.listSources();
-      setSources(result.sources);
-      setSnapshot(await bridge.snapshot());
-      if (result.sources.length === 0)
-        setNotice({
-          message: messages.app.noSources,
-          success: false,
-        });
-    } catch (error) {
-      setNotice({ message: errorMessage(error), success: false });
-    } finally {
-      setSourceLoading(false);
-    }
   }
 
   async function installUpdate() {
@@ -349,14 +327,15 @@ export function App() {
               onAutostart={(value) =>
                 void run(() => bridge.setAutostart(value))
               }
-              onDiscoverSources={() => void discoverSources()}
               onCancelEngineInstall={() =>
                 void bridge.cancelEngineInstall().then(() => bridge.snapshot()).then(setSnapshot)
               }
               onInstallEngine={() =>
                 void run(() => bridge.installEngine(), messages.app.engineInstalled)
               }
-              onMode={(mode) => void run(() => bridge.selectSourceMode(mode))}
+              onTargetApp={(targetApp) =>
+                void run(() => bridge.selectTargetApp(targetApp))
+              }
               onOpenData={() => void run(() => bridge.openDataDirectory())}
               onOpenRepository={() => void run(() => bridge.openRepository())}
               onRemoveEngine={() =>
@@ -369,13 +348,6 @@ export function App() {
               }
               onRequestClear={() => setConfirmClear(true)}
               onSection={setSettingsSection}
-              onSelectSource={(source) =>
-                void run(() =>
-                  bridge.selectSource(
-                    source ? { id: source.id, name: source.name } : null,
-                  ),
-                )
-              }
               onSelectVoice={(id) =>
                 void run(() => bridge.selectVoice(id), messages.app.voiceSelected)
               }
@@ -389,8 +361,6 @@ export function App() {
               playingKey={playingKey}
               section={settingsSection}
               snapshot={snapshot}
-              sourceLoading={sourceLoading}
-              sources={sources}
             />
           ) : null}
         </main>

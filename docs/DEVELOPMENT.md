@@ -108,7 +108,7 @@ cpv-audio-route.exe
 ```
 
 The in-app system-audio screen detects the official VB-CABLE render endpoint but does not mutate
-per-app audio policy. Assign ChatGPT/Codex to **CABLE Input** under **Settings → System → Sound →
+per-app audio policy. Assign the selected ChatGPT or Grok Bot app to **CABLE Input** under **Settings → System → Sound →
 Volume mixer**, verify the live route, and keep Persona Voice standby active. Restore the app to
 **Default** or the physical device before removing VB-CABLE.
 
@@ -166,7 +166,8 @@ bun run dev
 ```
 
 `dev` builds and self-tests the native helpers for the current OS before starting Vite and Electron.
-Start ChatGPT or Codex so source discovery has a live process tree/stream. On Linux/Windows, the
+Start the ChatGPT or Grok Bot app selected in **Settings → Audio** so source discovery has a live
+process tree/stream. On Linux/Windows, the
 first-run system-audio step installs or verifies the platform route before the engine step. Linux
 needs the managed policy installed/reloaded; Windows needs the VB-CABLE driver installed separately from VB-Audio and may need the per-app Volume Mixer assignment described above.
 

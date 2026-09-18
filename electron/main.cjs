@@ -53,6 +53,7 @@ const { VoiceModelSelection, initialVoiceModel } = require("./voice-models.cjs")
 const { listAudioSources } = require("./source-discovery.cjs");
 const { requireSourceMode } = require("./source-mode.cjs");
 const { createStateStore } = require("./state-store.cjs");
+const { requireTargetApp } = require("./target-apps.cjs");
 const { createUpdateController } = require("./update.cjs");
 const { VoiceCatalog } = require("./voice-catalog.cjs");
 const { createWindowsIntegration } = require("./windows-integration.cjs");
@@ -279,25 +280,25 @@ const TRAY_COPY = Object.freeze({
 const WINDOWS_RESTORE_COPY = Object.freeze({
   und: {
     title: "Restore the Windows audio route",
-    message: "Restore ChatGPT/Codex output before quitting Persona Voice.",
+    message: "Restore the selected application output before quitting Persona Voice.",
     detail: "In Windows Settings > System > Sound > Volume mixer, set the selected app Output back to Default or your physical listening device. Then confirm here.",
     buttons: ["Cancel", "Open Volume Mixer", "I've restored it"],
   },
   en: {
     title: "Restore the Windows audio route",
-    message: "Restore ChatGPT/Codex output before quitting Persona Voice.",
+    message: "Restore the selected application output before quitting Persona Voice.",
     detail: "In Windows Settings > System > Sound > Volume mixer, set the selected app Output back to Default or your physical listening device. Then confirm here.",
     buttons: ["Cancel", "Open Volume Mixer", "I've restored it"],
   },
   ja: {
     title: "Windows の音声ルートを戻す",
-    message: "Persona Voice を終了する前に ChatGPT/Codex の出力先を戻してください。",
+    message: "Persona Voice を終了する前に、選択したアプリの出力先を戻してください。",
     detail: "Windows 設定 > システム > サウンド > 音量ミキサーで、対象アプリの出力を「既定」または物理スピーカーに戻し、ここで確認してください。",
     buttons: ["キャンセル", "音量ミキサーを開く", "元に戻しました"],
   },
   "zh-CN": {
     title: "恢复 Windows 音频路由",
-    message: "退出 Persona Voice 前，请恢复 ChatGPT/Codex 的输出设备。",
+    message: "退出 Persona Voice 前，请恢复所选应用的输出设备。",
     detail: "在 Windows 设置 > 系统 > 声音 > 音量混合器中，将所选应用的输出改回“默认”或物理扬声器，然后在此确认。",
     buttons: ["取消", "打开音量混合器", "已恢复"],
   },
@@ -594,6 +595,7 @@ function registerIpc() {
       if ([
         "launchAtLogin",
         "sourceMode",
+        "targetApp",
         "sourceId",
         "sourceName",
         "selectedVoiceId",
@@ -628,6 +630,24 @@ function registerIpc() {
       await runtime.inspect(stateStore.read().settings);
       await broadcastSnapshot();
       return stateStore.read().settings;
+    });
+  });
+  handle("voice:select-target-app", async (_event, targetApp) => {
+    return stoppedMutationGate.run("target application update", async () => {
+      requireMutableSourceRoute();
+      const selected = requireTargetApp(targetApp);
+      const current = stateStore.read().settings;
+      const settings = stateStore.replaceSettings({
+        ...current,
+        sourceMode: "desktop-application",
+        targetApp: selected,
+        sourceId: null,
+        sourceName: null,
+      }).settings;
+      await platformAudioSetup.inspect(settings);
+      await runtime.inspect(settings);
+      await broadcastSnapshot();
+      return settings;
     });
   });
   handle("voice:select-source", async (_event, source) => {

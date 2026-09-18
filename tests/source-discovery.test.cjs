@@ -11,6 +11,7 @@ const {
   processSources,
   selectedProcessTree,
 } = require("../electron/source-discovery.cjs");
+const { targetAppProcessPattern } = require("../electron/target-apps.cjs");
 
 test("platform parsers preserve process identity and expose only audio-output sources", () => {
   const macProcesses = parseMacProcesses(
@@ -207,8 +208,8 @@ test("automatic discovery selects application voice trees and rejects name-only 
   assert.deepEqual(
     defaultVoiceProcessTree(applicationProcesses, { ownProcessId: 100 }),
     {
-      pids: [200, 201, 300],
-      rootPids: [200, 300],
+      pids: [200, 201],
+      rootPids: [200],
     },
   );
 
@@ -277,4 +278,43 @@ test("automatic discovery selects application voice trees and rejects name-only 
       rootPids: [10],
     },
   );
+});
+
+test("target application discovery isolates Grok Bot from ChatGPT", () => {
+  const processes = [
+    {
+      pid: 10,
+      parentId: 1,
+      executable: "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT",
+    },
+    {
+      pid: 11,
+      parentId: 10,
+      executable: "/Applications/ChatGPT.app/Contents/Frameworks/ChatGPT Helper.app/Contents/MacOS/ChatGPT Helper",
+    },
+    {
+      pid: 20,
+      parentId: 1,
+      executable: "/Applications/Grok Bot.app/Contents/MacOS/Grok Bot",
+    },
+    {
+      pid: 21,
+      parentId: 20,
+      executable: "/Applications/Grok Bot.app/Contents/Frameworks/Grok Bot Helper.app/Contents/MacOS/Grok Bot Helper",
+    },
+  ];
+  assert.deepEqual(defaultVoiceProcessTree(processes, {
+    ownProcessId: 999,
+    pattern: targetAppProcessPattern("grok-bot"),
+  }), {
+    pids: [20, 21],
+    rootPids: [20],
+  });
+  assert.deepEqual(defaultVoiceProcessTree(processes, {
+    ownProcessId: 999,
+    pattern: targetAppProcessPattern("chatgpt"),
+  }), {
+    pids: [10, 11],
+    rootPids: [10],
+  });
 });

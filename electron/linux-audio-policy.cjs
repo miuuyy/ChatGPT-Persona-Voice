@@ -6,7 +6,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { execFileSync } = require("node:child_process");
 
-const POLICY_VERSION = 2;
+const POLICY_VERSION = 3;
 const NODE_PREFIX = "chatgpt-persona-voice";
 const ASSET_ROOT = path.join(__dirname, "..", "native", "linux", "wireplumber");
 const MANAGED_PATTERN = /^(?:#|--) Managed by ChatGPT Persona Voice; policy-version=\d+/;
@@ -26,6 +26,14 @@ const DEFAULT_ROUTES = Object.freeze([
       Object.freeze({ property: "application.name", value: "Codex" }),
       Object.freeze({ property: "application.name", value: "OpenAI Codex" }),
       Object.freeze({ property: "application.process.binary", value: "codex" }),
+    ]),
+  }),
+  Object.freeze({
+    id: "grok-bot",
+    identities: Object.freeze([
+      Object.freeze({ property: "application.name", value: "Grok Bot" }),
+      Object.freeze({ property: "application.process.binary", value: "grok-bot" }),
+      Object.freeze({ property: "application.process.binary", value: "grokbot" }),
     ]),
   }),
 ]);

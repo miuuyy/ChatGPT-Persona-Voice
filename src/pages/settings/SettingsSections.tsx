@@ -7,7 +7,6 @@ import {
   useI18n,
 } from "../../i18n";
 import type {
-  AudioSource,
   LauncherSnapshot,
   PlatformAudioSetupState,
   Settings,
@@ -35,17 +34,13 @@ export type SettingsSectionProps = {
   snapshot: LauncherSnapshot;
   section: SettingsSectionId;
   busy: boolean;
-  sources: AudioSource[];
-  sourceLoading: boolean;
   playingKey: string | null;
   onSetting: <Key extends UserSettingKey>(key: Key, value: Settings[Key]) => void;
   onInstallEngine: () => void;
   onCancelEngineInstall: () => void;
   onRemoveEngine: () => void;
   onAutostart: (value: boolean) => void;
-  onMode: (mode: Settings["sourceMode"]) => void;
-  onDiscoverSources: () => void;
-  onSelectSource: (source: AudioSource | null) => void;
+  onTargetApp: (targetApp: Settings["targetApp"]) => void;
   onSelectVoice: (id: string) => void;
   onSelectModel: (id: Settings["selectedModelId"]) => void;
   onPreviewVoice: (voice: VoicePreset) => void;
@@ -59,17 +54,13 @@ export function SettingsSections({
   snapshot,
   section,
   busy,
-  sources,
-  sourceLoading,
   playingKey,
   onSetting,
   onInstallEngine,
   onCancelEngineInstall,
   onRemoveEngine,
   onAutostart,
-  onMode,
-  onDiscoverSources,
-  onSelectSource,
+  onTargetApp,
   onSelectVoice,
   onSelectModel,
   onPreviewVoice,
@@ -133,9 +124,6 @@ export function SettingsSections({
     (voice) => voice.id === settings.selectedVoiceId,
   );
   const selectedModel = snapshot.models.find((model) => model.id === settings.selectedModelId)!;
-  const selectedSourceMissing =
-    settings.sourceId !== null &&
-    !sources.some((source) => source.id === settings.sourceId);
   const engineCheck = snapshot.runtime.checks.find(
     (check) => check.id === "engine",
   );
@@ -164,87 +152,28 @@ export function SettingsSections({
         ) : null}
         <div className="settings-block">
           <div className="settings-block-heading">
-            <h3>{messages.settings.audio.sourceMethod}</h3>
-            <p>{messages.settings.audio.sourceMethodBody}</p>
+            <h3>{messages.settings.audio.application}</h3>
+            <p>{messages.settings.audio.applicationBody}</p>
           </div>
           <div className="source-choices">
             <SourceChoice
-              active={settings.sourceMode === "desktop-application"}
-              badge={desktopReady ? undefined : messages.common.unavailable}
-              description={messages.settings.audio.desktopBody}
-              disabled={busy || !desktopReady}
+              active={settings.targetApp === "chatgpt"}
+              description={messages.settings.audio.chatgptBody}
+              disabled={busy}
               icon="app"
-              onClick={() => onMode("desktop-application")}
-              title={messages.settings.audio.desktopTitle}
+              onClick={() => onTargetApp("chatgpt")}
+              title={messages.settings.audio.chatgptTitle}
             />
             <SourceChoice
-              active={settings.sourceMode === "codex-app-server"}
-              badge={
-                capabilities.ownedSession.ready ? undefined : messages.common.notBundled
-              }
-              description={messages.settings.audio.codexBody}
-              disabled={busy || !capabilities.ownedSession.ready}
+              active={settings.targetApp === "grok-bot"}
+              description={messages.settings.audio.grokBotBody}
+              disabled={busy}
               icon="server"
-              onClick={() => onMode("codex-app-server")}
-              title={messages.settings.audio.codexTitle}
+              onClick={() => onTargetApp("grok-bot")}
+              title={messages.settings.audio.grokBotTitle}
             />
           </div>
         </div>
-        {settings.sourceMode === "desktop-application" ? (
-          <div className="settings-block">
-            <div className="settings-block-heading">
-              <h3>{messages.settings.audio.application}</h3>
-              <p>{messages.settings.audio.applicationBody}</p>
-            </div>
-            <div className="settings-list">
-              <SettingRow
-                description={
-                  settings.sourceId
-                    ? messages.settings.audio.pinnedSource
-                    : messages.settings.audio.automaticSource
-                }
-                title={settings.sourceName || messages.settings.audio.automaticApps}
-              >
-                <div className="source-select-control">
-                  <select
-                    aria-label={messages.settings.audio.sourceLabel}
-                    disabled={busy || sourceLoading || !desktopReady}
-                    onChange={(event) =>
-                      onSelectSource(
-                        sources.find(
-                          (candidate) => candidate.id === event.target.value,
-                        ) || null,
-                      )
-                    }
-                    value={settings.sourceId || ""}
-                  >
-                    <option value="">{messages.common.automatic}</option>
-                    {selectedSourceMissing ? (
-                      <option value={settings.sourceId!}>
-                        {settings.sourceName}
-                      </option>
-                    ) : null}
-                    {sources.map((source) => (
-                      <option key={source.id} value={source.id}>
-                        {source.name}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    aria-label={messages.settings.audio.refreshApps}
-                    className="icon-button bordered"
-                    disabled={busy || sourceLoading || !desktopReady}
-                    onClick={onDiscoverSources}
-                    title={messages.settings.audio.refreshApps}
-                    type="button"
-                  >
-                    <Icon name="refresh" />
-                  </button>
-                </div>
-              </SettingRow>
-            </div>
-          </div>
-        ) : null}
         <div className="settings-block">
           <div className="settings-block-heading">
             <h3>{messages.settings.audio.routeGuarantee}</h3>

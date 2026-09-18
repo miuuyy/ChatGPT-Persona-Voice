@@ -4,7 +4,6 @@
     "blocked": "已阻断",
     "unavailable": "不可用",
     "backendNeeded": "需要后端",
-    "notBundled": "未内置",
     "setupNeeded": "需要设置",
     "cancel": "取消",
     "cancelling": "正在取消…",
@@ -18,7 +17,6 @@
     "developmentBuild": "开发版本"
   },
   "app": {
-    "noSources": "未找到正在输出音频的应用。",
     "routeRestored": "已恢复原始音频链路。",
     "engineInstalled": "语音引擎已安装。",
     "engineRemoved": "语音引擎已移除。",
@@ -41,13 +39,22 @@
     "updating": "正在更新…"
   },
   "onboarding": {
-    "supportStep": "第 1 步，共 2 步",
-    "supportStepWithAudio": "第 1 步，共 3 步",
-    "platformAudioStep": "第 2 步，共 3 步",
-    "engineStep": "第 2 步，共 2 步",
-    "engineStepWithAudio": "第 3 步，共 3 步",
+    "targetStep": "第 1 步，共 3 步",
+    "targetStepWithAudio": "第 1 步，共 4 步",
+    "supportStep": "第 2 步，共 3 步",
+    "supportStepWithAudio": "第 2 步，共 4 步",
+    "platformAudioStep": "第 3 步，共 4 步",
+    "engineStep": "第 3 步，共 3 步",
+    "engineStepWithAudio": "第 4 步，共 4 步",
+    "targetKicker": "语音应用",
+    "targetTitle": "选择声音的来源应用。",
+    "targetBody": "Persona Voice 只捕获你选择的应用。之后可在设置 → 音频中切换。",
+    "chatgptTitle": "ChatGPT",
+    "chatgptBody": "使用 ChatGPT 桌面应用及其中的 Codex 体验进行语音模式。",
+    "grokBotTitle": "Grok Bot",
+    "grokBotBody": "与 Grok Bot 桌面应用中的任意 Bot 进行语音聊天。",
     "supportKicker": "欢迎使用 PERSONA VOICE",
-    "supportTitle": "替换 ChatGPT 和 Codex 的输出声音。",
+    "supportTitle": "替换 ChatGPT、Codex 或 Grok Bot 的输出声音。",
     "supportBody": "如果你愿意帮助更多人发现本项目，可以打开代码仓库点亮星标，或在 X 上关注作者。",
     "githubOpened": "已打开 GitHub",
     "starGithub": "在 GitHub 点亮星标",
@@ -75,7 +82,7 @@
   "platformAudio": {
     "kicker": "系统音频链路",
     "linuxTitle": "设置受保护的 Linux 音频链路。",
-    "linuxBody": "Persona Voice 会为 ChatGPT 和 Codex 安装一次由本应用所有、仅限当前用户的 PipeWire/WirePlumber 策略，绝不会替换非本应用管理的策略文件。",
+    "linuxBody": "Persona Voice 会为 ChatGPT、Codex 和 Grok Bot 安装一次由本应用所有、仅限当前用户的 PipeWire/WirePlumber 策略，绝不会替换非本应用管理的策略文件。",
     "linuxRouteName": "自有 PipeWire / WirePlumber 链路",
     "linuxOwnedFact": "仅需安装一次，且只影响当前用户",
     "linuxRestartFact": "用户音频会话会重启一次，应用保持打开",
@@ -84,7 +91,7 @@
     "windowsSinkName": "VB-CABLE Input",
     "windowsInstallerFact": "单独安装 VB-Audio 官方驱动",
     "windowsDownloadStep": "下载 VB-CABLE，以管理员身份运行安装程序，然后重启 Windows。",
-    "windowsOpenAppStep": "打开 ChatGPT 或 Codex，并启动语音模式或音频播放。",
+    "windowsOpenAppStep": "打开 {app}，并启动语音模式或音频播放。",
     "windowsAssignStep": "在 Windows 音量合成器中，将该应用的输出设为 CABLE Input。",
     "windowsVerifyStep": "返回此处并验证正在使用的链路。",
     "statusReady": "就绪",
@@ -114,7 +121,7 @@
     "windowsSettingsNotice": "VB-CABLE 是从 VB-Audio 安装的第三方软件。卸载 VB-CABLE 前，请在音量合成器中将各应用的输出恢复为“默认”。"
   },
   "home": {
-    "armedDetail": "请在 ChatGPT 或 Codex 中打开语音模式。在对话接通之前，原始音频链路不会改变。",
+    "armedDetail": "请在 {app} 中打开语音模式。在对话接通之前，原始音频链路不会改变。",
     "runningDetail": "正在把实时音频转换为{voice}。",
     "selectedVoice": "所选声音",
     "startingDetail": "正在加载并预热本地语音引擎。准备期间可以安全取消。",
@@ -123,8 +130,8 @@
     "readyDetail": "启动一次后即可照常使用语音模式。转换和历史数据都会留在本设备。",
     "blockedDetailOne": "中继启动前需要处理 {count} 项检查。",
     "blockedDetailOther": "中继启动前需要处理 {count} 项检查。",
-    "title": "替换 ChatGPT 和 Codex 的输出声音。",
-    "intro": "选择声音并启动 Persona Voice，然后照常使用语音模式。转换在本设备上运行。",
+    "title": "为 ChatGPT、Codex 或 Grok Bot 换上任意声音。",
+    "intro": "选择应用和声音并启动 Persona Voice，然后照常使用语音模式。转换在本设备上运行。",
     "relayControl": "语音中继控制",
     "selectVoice": "选择目标声音",
     "reviewSetup": "检查设置",
@@ -163,7 +170,7 @@
     "stopVoice": "停止语音转换",
     "startVoice": "启动语音转换",
     "codexSession": "Codex 实时会话",
-    "automaticApps": "自动选择 ChatGPT / Codex"
+    "automaticApps": "已选择的语音应用"
   },
   "history": {
     "title": "历史",
@@ -202,8 +209,8 @@
     "sections": {
       "audio": {
         "label": "音频",
-        "description": "选择应用和链路方式。",
-        "keywords": "来源 ChatGPT Codex 捕获 链路 应用 服务器 输入 输出"
+        "description": "选择由 Persona Voice 替换声音的应用。",
+        "keywords": "来源 ChatGPT Codex Grok Bot 捕获 链路 应用 服务器 输入 输出"
       },
       "voice": {
         "label": "语音模型",
@@ -228,19 +235,12 @@
     },
     "audio": {
       "unavailableTitle": "此系统无法使用透明中继",
-      "sourceMethod": "来源方式",
-      "sourceMethodBody": "Persona Voice 必须先接管或抑制原始链路，才能播放转换后音频。",
-      "desktopTitle": "桌面应用",
-      "desktopBody": "无需改变语音模式的使用方式，即可捕获 ChatGPT 或 Codex。",
-      "codexTitle": "Codex 实时会话",
-      "codexBody": "在硬件播放之前接管 Codex 实时 PCM 流。",
-      "application": "应用",
-      "applicationBody": "自动模式会跟踪匹配的 ChatGPT 和 Codex 进程树。",
-      "pinnedSource": "已固定到稳定的可执行文件或流标识。",
-      "automaticSource": "使用所有匹配的实时语音进程。",
-      "automaticApps": "自动选择 ChatGPT / Codex",
-      "sourceLabel": "桌面音频来源",
-      "refreshApps": "刷新应用列表",
+      "application": "语音应用",
+      "applicationBody": "选择由 Persona Voice 替换朗读声音的桌面应用。",
+      "chatgptTitle": "ChatGPT",
+      "chatgptBody": "跟随 ChatGPT 桌面进程树，包括 Codex 语音模式。",
+      "grokBotTitle": "Grok Bot",
+      "grokBotBody": "跟随官方 Grok Bot 桌面进程树及其语音聊天。",
       "routeGuarantee": "链路保证",
       "routeGuaranteeBody": "缺少捕获、抑制、转换或输出中的任一项都会阻止启动。",
       "processCapture": "进程捕获",

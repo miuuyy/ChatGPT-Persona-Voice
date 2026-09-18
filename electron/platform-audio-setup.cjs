@@ -2,6 +2,7 @@
 
 const path = require("node:path");
 const { Worker } = require("node:worker_threads");
+const { targetAppLabel } = require("./target-apps.cjs");
 
 function state(value) {
   return {
@@ -185,7 +186,7 @@ class PlatformAudioSetupController {
       return this.transition({
         status: "action-required",
         code: "windows_source_required",
-        detail: "Open ChatGPT or Codex before verifying its Windows output route",
+        detail: "Choose an application before verifying its Windows output route",
         canActivate: true,
         requiresRouteAssignment: true,
       });
@@ -193,7 +194,7 @@ class PlatformAudioSetupController {
     return this.transition({
       status: "action-required",
       code: "windows_route_assignment_required",
-      detail: "Assign ChatGPT or Codex output to CABLE Input in Windows Volume Mixer",
+      detail: `Assign ${targetAppLabel(settings.targetApp)} output to CABLE Input in Windows Volume Mixer`,
       canActivate: true,
       requiresRouteAssignment: true,
     });

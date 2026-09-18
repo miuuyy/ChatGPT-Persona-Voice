@@ -46,6 +46,7 @@ function recorderFixture(overrides = {}) {
   const settings = {
     saveConvertedAudio: true,
     sourceMode: "desktop-application",
+    targetApp: "chatgpt",
     sourceName: "ChatGPT",
     selectedVoiceName: "Authorized voice",
   };
@@ -82,6 +83,12 @@ test("history recorder preserves speech boundaries, stays inert when disabled, a
   assert.equal(fixture.writes[0].voiceName, "Authorized voice");
   assert.equal(fixture.writes[0].sourceName, "ChatGPT");
   assert.deepEqual(fixture.errors, []);
+  const grokFixture = recorderFixture();
+  grokFixture.settings.targetApp = "grok-bot";
+  grokFixture.settings.sourceName = null;
+  grokFixture.recorder.accept(audioFrame(0.25));
+  grokFixture.recorder.flush();
+  assert.equal(grokFixture.writes[0].sourceName, "Grok Bot");
   const boundaryFixture = recorderFixture();
   boundaryFixture.recorder.accept(audioFrame(0.2, { itemId: "first" }));
   boundaryFixture.recorder.accept(audioFrame(0.2, { itemId: "second" }));

@@ -35,9 +35,10 @@ function testLinuxNative(platform = process.platform) {
   if (capture.supportsProcessScopedRouting !== true || capture.supportsRollbackProof !== true ||
       capture.supportsPrelinkedIngress !== true || capture.supportsDynamicProcessStreams !== true ||
       capture.supportsCrashRecovery !== true || capture.policyProbeVerified !== true ||
-      capture.policyVersion !== 2 || capture.routeOwner !== "wireplumber-prelink-policy" ||
+      capture.policyVersion !== 3 || capture.routeOwner !== "wireplumber-prelink-policy" ||
       !Array.isArray(capture.supportedRouteIds) ||
-      !capture.supportedRouteIds.includes("chatgpt") || !capture.supportedRouteIds.includes("codex")) {
+      !capture.supportedRouteIds.includes("chatgpt") || !capture.supportedRouteIds.includes("codex") ||
+      !capture.supportedRouteIds.includes("grok-bot")) {
     throw new Error("Capture helper did not prove the WirePlumber pre-link and crash-recovery contract");
   }
   if (output.supportsNativePipeWire !== true || output.supportsJitterBuffer !== true ||

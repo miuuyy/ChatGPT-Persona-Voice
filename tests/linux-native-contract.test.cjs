@@ -23,6 +23,7 @@ test("Linux capture is bounded, route-specific, and emits PCM only after mute pr
   assert.match(capture, /kCaptureQueueSlots = 64/);
   assert.match(capture, /--route/);
   assert.match(capture, /supportedRouteIds/);
+  assert.match(capture, /grok-bot/);
   assert.match(capture, /waitForBypassMute\(true/);
   assert.match(capture, /suppressed_\.load/);
   assert.match(capture, /routeOwnershipVerified\\\":true/);

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
   <title id="title">Persona Voice: choose a local voice model</title>
-  <desc id="desc">ChatGPT or Codex audio enters the Persona Voice route, is converted by the selected Chatterbox or Seed-VC model, and plays through the speakers. Conversion is local and streams continuously.</desc>
+  <desc id="desc">ChatGPT, Codex, or Grok Bot audio enters the Persona Voice route, is converted by the selected Chatterbox or Seed-VC model, and plays through the speakers. Conversion is local and streams continuously.</desc>
   <defs>
     <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#171e29"/><stop offset="1" stop-color="#101316"/></linearGradient>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10" fill="none" stroke="#6b829c" stroke-width="1.5"/></marker>
@@ -19,8 +19,9 @@
       <path d="M279 160H329"/><path d="M553 160H603"/><path d="M895 160H945"/>
     </g>
     <g text-anchor="middle">
-      <text x="157" y="148" font-size="20" font-weight="600">ChatGPT / Codex</text>
-      <text x="157" y="176" font-size="13" fill="#a2b0c1">Your conversation stays here</text>
+      <text x="157" y="137" font-size="18" font-weight="600">ChatGPT / Codex</text>
+      <text x="157" y="160" font-size="18" font-weight="600">or Grok Bot</text>
+      <text x="157" y="190" font-size="13" fill="#a2b0c1">Your conversation stays here</text>
       <text x="443" y="148" font-size="20" font-weight="600">Audio route</text>
       <text x="443" y="176" font-size="13" fill="#a2b0c1">Original playback suppressed</text>
       <text x="751" y="107" font-size="12" fill="#91a7c2">SELECTED VOICE MODEL</text>

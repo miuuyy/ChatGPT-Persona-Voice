@@ -8,6 +8,7 @@ const {
   resolveDefaultVoiceProcessTree,
   resolveSelectedProcessTree,
 } = require("./source-discovery.cjs");
+const { targetAppLabel } = require("./target-apps.cjs");
 
 const PROBE_CACHE_MS = 5_000;
 const WINDOWS_PROCESS_LOOPBACK_MINIMUM_BUILD = 20_348;
@@ -189,11 +190,14 @@ class WindowsProcessRoute {
   resolveProcesses(settings) {
     return settings?.sourceId
       ? this.processResolver({ sourceId: settings.sourceId, platform: this.platform })
-      : this.defaultProcessResolver({ platform: this.platform });
+      : this.defaultProcessResolver({
+          platform: this.platform,
+          targetApp: settings?.targetApp,
+        });
   }
 
   resolveProcessesForProbe(settings) {
-    const key = settings?.sourceId || "__default_voice_process__";
+    const key = settings?.sourceId || `target:${settings?.targetApp || "chatgpt"}`;
     const existing = this.processProbeInFlight.get(key);
     if (existing) return existing;
     const resolving = Promise.resolve().then(() => this.resolveProcesses(settings));
@@ -216,14 +220,14 @@ class WindowsProcessRoute {
           code: "desktop_source_not_running",
           detail: settings?.sourceName
             ? `${settings.sourceName} is not currently running`
-            : "Start ChatGPT or Codex, or select another running application",
+            : `Start ${targetAppLabel(settings?.targetApp)} before verifying its Windows audio route`,
         };
       }
       if (processes.rootPids.length !== 1) {
         return {
           ready: false,
           code: "windows_source_selection_required",
-          detail: "Select one ChatGPT or Codex application; one WASAPI process-loopback stream owns one process tree",
+          detail: `Close duplicate ${targetAppLabel(settings?.targetApp)} instances; one WASAPI process-loopback stream owns one process tree`,
         };
       }
       return {
@@ -258,7 +262,7 @@ class WindowsProcessRoute {
     if (processes.pids.length === 0 || processes.rootPids.length === 0) {
       throw new Error(settings?.sourceName
         ? `${settings.sourceName} is not currently running`
-        : "Start ChatGPT or Codex, or select another running application");
+        : `Start ${targetAppLabel(settings?.targetApp)} before verifying its Windows audio route`);
     }
     if (processes.rootPids.length !== 1) {
       throw new Error("Windows process-loopback requires exactly one selected process tree");

@@ -2,10 +2,13 @@
 
 const { execFile } = require("node:child_process");
 const { promisify } = require("node:util");
+const {
+  DEFAULT_TARGET_APP,
+  targetAppProcessPattern,
+} = require("./target-apps.cjs");
 
 const execFileAsync = promisify(execFile);
-const DEFAULT_VOICE_APP_PATTERN =
-  /(?:^|[\\/])(?:chatgpt|codex|openai codex|codex desktop)(?:\.exe)?$/i;
+const DEFAULT_VOICE_APP_PATTERN = targetAppProcessPattern(DEFAULT_TARGET_APP);
 
 function encoded(value) {
   return Buffer.from(String(value), "utf8").toString("base64url");
@@ -253,13 +256,17 @@ async function resolveDefaultVoiceProcessTree({
   platform = process.platform,
   run = execFileAsync,
   ownProcessId = process.pid,
-  pattern = DEFAULT_VOICE_APP_PATTERN,
+  targetApp = DEFAULT_TARGET_APP,
+  pattern = null,
 } = {}) {
   if (platform !== "darwin" && platform !== "win32") {
     throw new Error("Automatic process-tree audio sources are available only on macOS and Windows");
   }
   const processes = await listPlatformProcesses({ platform, run });
-  return defaultVoiceProcessTree(processes, { pattern, ownProcessId });
+  return defaultVoiceProcessTree(processes, {
+    pattern: pattern ?? targetAppProcessPattern(targetApp),
+    ownProcessId,
+  });
 }
 
 function pipeWireSources(objects) {

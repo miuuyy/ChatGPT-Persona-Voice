@@ -12,33 +12,35 @@ import type {
   OnboardingState,
   PlatformAudioSetupState,
   Settings,
+  TargetApp,
   VoiceBridge,
 } from "../types";
-import { errorMessage, formatBytes } from "../lib/presentation";
+import { errorMessage, formatBytes, targetAppLabel } from "../lib/presentation";
 import { ModelSelector } from "./ModelSelector";
 
-type OnboardingStep = "language" | "support" | "platform-audio" | "engine";
+type OnboardingStep = "language" | "target-app" | "support" | "platform-audio" | "engine";
 type PlatformAudioAction = "refresh" | "install" | "activate";
 
 export function Onboarding({
   bridge,
   onChange,
-  onLocaleChange,
+  onSettingsChange,
   snapshot,
 }: {
   bridge: VoiceBridge;
   onChange: (state: OnboardingState) => void;
-  onLocaleChange: (settings: Settings) => void;
+  onSettingsChange: (settings: Settings) => void;
   snapshot: LauncherSnapshot;
 }) {
   const [step, setStep] = useState<OnboardingStep>(() =>
-    snapshot.settings.uiLocale === null ? "language" : "support",
+    snapshot.settings.uiLocale === null ? "language" : "target-app",
   );
   const [platformAudioSetup, setPlatformAudioSetup] =
     useState<PlatformAudioSetupState>(snapshot.platformAudioSetup);
   const [audioStepIncluded, setAudioStepIncluded] = useState(false);
   const [busy, setBusy] = useState<
     | "locale"
+    | "target-app"
     | "github"
     | "x"
     | "audio-refresh"
@@ -68,7 +70,20 @@ export function Onboarding({
     setBusy("locale");
     setError(null);
     try {
-      onLocaleChange(await bridge.setSetting("uiLocale", nextLocale));
+      onSettingsChange(await bridge.setSetting("uiLocale", nextLocale));
+      setStep("target-app");
+    } catch (cause) {
+      setError(errorMessage(cause));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function chooseTargetApp(targetApp: TargetApp) {
+    setBusy("target-app");
+    setError(null);
+    try {
+      onSettingsChange(await bridge.selectTargetApp(targetApp));
       setStep("support");
     } catch (cause) {
       setError(errorMessage(cause));
@@ -188,7 +203,11 @@ export function Onboarding({
       }[platformAudioSetup.status];
   const stepLabel = step === "language"
     ? "Language"
-    : step === "support"
+    : step === "target-app"
+      ? countedAudioStep
+        ? messages!.onboarding.targetStepWithAudio
+        : messages!.onboarding.targetStep
+      : step === "support"
       ? countedAudioStep
         ? messages!.onboarding.supportStepWithAudio
         : messages!.onboarding.supportStep
@@ -240,6 +259,35 @@ export function Onboarding({
                   <Icon name="chevron" />
                 </button>
               ))}
+            </div>
+          </>
+        ) : step === "target-app" ? (
+          <>
+            <span className="onboarding-kicker">{messages!.onboarding.targetKicker}</span>
+            <h1>{messages!.onboarding.targetTitle}</h1>
+            <p>{messages!.onboarding.targetBody}</p>
+
+            <div
+              aria-label={messages!.onboarding.targetTitle}
+              className="onboarding-actions"
+              role="group"
+            >
+              <TargetAppAction
+                active={snapshot.settings.targetApp === "chatgpt"}
+                description={messages!.onboarding.chatgptBody}
+                disabled={busy !== null}
+                icon="app"
+                label={messages!.onboarding.chatgptTitle}
+                onClick={() => void chooseTargetApp("chatgpt")}
+              />
+              <TargetAppAction
+                active={snapshot.settings.targetApp === "grok-bot"}
+                description={messages!.onboarding.grokBotBody}
+                disabled={busy !== null}
+                icon="server"
+                label={messages!.onboarding.grokBotTitle}
+                onClick={() => void chooseTargetApp("grok-bot")}
+              />
             </div>
           </>
         ) : step === "support" ? (
@@ -318,7 +366,9 @@ export function Onboarding({
                   <span><Icon name="external" /> {messages!.platformAudio.windowsDownloadStep}</span>
                   {platformAudioSetup.requiresRouteAssignment ? (
                     <>
-                      <span><Icon name="app" /> {messages!.platformAudio.windowsOpenAppStep}</span>
+                      <span><Icon name="app" /> {formatMessage(messages!.platformAudio.windowsOpenAppStep, {
+                        app: targetAppLabel(snapshot.settings.targetApp),
+                      })}</span>
                       <span><Icon name="settings" /> {messages!.platformAudio.windowsAssignStep}</span>
                       <span><Icon name="check" /> {messages!.platformAudio.windowsVerifyStep}</span>
                     </>
@@ -386,7 +436,7 @@ export function Onboarding({
         {error ? <p className="onboarding-error" role="alert">{error}</p> : null}
       </section>
 
-      {step !== "language" ? (
+      {step !== "language" && step !== "target-app" ? (
         <footer className="onboarding-footer">
           {step === "support" ? (
             <>
@@ -533,6 +583,39 @@ export function Onboarding({
         </footer>
       ) : null}
     </main>
+  );
+}
+
+function TargetAppAction({
+  active,
+  description,
+  disabled,
+  icon,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  description: string;
+  disabled: boolean;
+  icon: "app" | "server";
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      aria-pressed={active}
+      className={`onboarding-action${active ? " is-complete" : ""}`}
+      disabled={disabled}
+      onClick={onClick}
+      type="button"
+    >
+      <span className="onboarding-action-icon"><Icon name={icon} /></span>
+      <span>
+        <strong>{label}</strong>
+        <small>{description}</small>
+      </span>
+      <Icon name={active ? "check" : "chevron"} />
+    </button>
   );
 }
 

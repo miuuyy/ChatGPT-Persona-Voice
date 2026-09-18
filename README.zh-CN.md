@@ -1,4 +1,4 @@
-<h1 align="center">自定义 ChatGPT 和 Codex 的输出声音</h1>
+<h1 align="center">自定义 ChatGPT、Codex 和 Grok Bot 的输出声音</h1>
 
 <p align="center">
   <strong>Persona Voice 在本地替换助手语音，并以近实时速度播放。</strong>
@@ -23,12 +23,12 @@
 </p>
 
 <p align="center">
-  <img src="assets/architecture-models.svg" alt="ChatGPT 和 Codex 音频通过所选本地语音模型路由到扬声器" width="1200">
+  <img src="assets/architecture-models.svg" alt="ChatGPT、Codex 或 Grok Bot 音频通过所选本地语音模型路由到扬声器" width="1200">
 </p>
 
-Persona Voice 是一款桌面应用，可将 ChatGPT 和 Codex 的语音输出替换为你选择的声音。
-对话和控制仍保留在原应用中，语音转换则在本设备上运行。输出质量与时序会因硬件、
-输入音频和所选参考而异。
+Persona Voice 是一款桌面应用，可将 ChatGPT、Codex 或 Grok Bot 的语音输出替换为你选择的
+声音。只需选择一次来源应用；对话和控制仍保留在原应用中，语音转换则在本设备上运行。
+输出质量与时序会因硬件、输入音频和所选参考而异。
 
 ## 语音模型
 
@@ -50,6 +50,8 @@ Persona Voice 是一款桌面应用，可将 ChatGPT 和 Codex 的语音输出�
   实际延迟会因硬件和音频路由而异。
 - **替换原声，而不是叠加播放。** Persona Voice 会抑制所选应用的原始播放，
   并把转换后的声音发送到扬声器。
+- **一条中继支持多个语音应用。** 无需更换模型、声音或本地转换管线，即可在 ChatGPT
+  （包括 Codex）与 Grok Bot 之间切换。
 - **本地推理。** 安装后的转换在你的设备上运行，不需要语音 API 密钥。
 - **预设声音与私有参考音频。** 内置目录包含标注来源的 VOICEVOX 角色，以及少量社区和
   演示参考。你也可以添加自己有权使用的私有参考音频。
@@ -61,7 +63,7 @@ Persona Voice 是一款桌面应用，可将 ChatGPT 和 Codex 的语音输出�
 ## 工作原理
 
 ```text
-ChatGPT / Codex 应用
+ChatGPT / Codex 或 Grok Bot
         │ 语音输出
         ▼
 Persona Voice 音频路由
@@ -90,9 +92,9 @@ https://github.com/user-attachments/assets/f43f9f90-a76f-4984-b061-145aa7db5467
 Windows 设置会打开官方 [VB-CABLE](https://vb-audio.com/Cable/) 下载页面；请单独安装、重启
 Windows，然后按应用内的音量合成器步骤操作。
 
-1. 启动 Persona Voice，选择并下载一个模型，再完成系统音频设置。
-2. 打开 ChatGPT 或 Codex，然后在 Persona Voice 中选择来源应用和目标声音。
-3. 点击 **启动语音转换**，再进入 ChatGPT 或 Codex 的语音模式。
+1. 启动 Persona Voice，选择 **ChatGPT** 或 **Grok Bot**，完成系统音频设置，并下载一个模型。
+2. 选择目标声音并点击 **启动语音转换**。
+3. 在所选应用中照常进入语音模式。
 
 要求见[平台状态](#平台状态)；如果设置受阻，请查看[故障排除](docs/TROUBLESHOOTING.md)。
 
@@ -183,5 +185,6 @@ bun run smoke:engine
 
 ## 免责声明
 
-Codex Persona Voice 是独立软件，与 OpenAI 无隶属或背书关系。ChatGPT、Codex 与 OpenAI
-标志属于 OpenAI。本项目不会绕过身份验证、订阅、权限或访问控制。
+Persona Voice 是独立软件，与 OpenAI、xAI 或 Cursor 无隶属或背书关系。ChatGPT、Codex、
+OpenAI、Grok、Grok Bot、xAI 与 Cursor 的名称和标志均归各自权利人所有。本项目不会绕过
+身份验证、订阅、权限或访问控制。

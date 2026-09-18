@@ -30,17 +30,17 @@ function temporaryPolicyEnvironment(prefix) {
   };
 }
 
-test("Linux policy separates ChatGPT and Codex before physical target selection", () => {
+test("Linux policy separates ChatGPT, Codex, and Grok Bot before physical target selection", () => {
   const pipewire = renderPipeWireConfig();
   const wireplumber04 = renderWirePlumber04Config();
   const wireplumber05 = renderWirePlumber05Config();
-  for (const routeId of ["chatgpt", "codex"]) {
+  for (const routeId of ["chatgpt", "codex", "grok-bot"]) {
     assert.match(pipewire, new RegExp(routeNode("ingress", routeId).replaceAll(".", "\\.")));
     assert.match(pipewire, new RegExp(routeNode("bypass", routeId).replaceAll(".", "\\.")));
     assert.match(wireplumber04, new RegExp(`route = "${routeId}"`));
     assert.match(wireplumber05, new RegExp(`route = "${routeId}"`));
   }
-  assert.equal((pipewire.match(/libpipewire-module-loopback/g) || []).length, 2);
+  assert.equal((pipewire.match(/libpipewire-module-loopback/g) || []).length, 3);
   assert.doesNotMatch(pipewire, /node\.rules|target\.object/);
   assert.match(wireplumber04, /load_script\("cpv-create-item\.lua"/);
   assert.match(wireplumber05, /hooks\.cpv\.policy = required/);

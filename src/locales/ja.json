@@ -4,7 +4,6 @@
     "blocked": "ブロック中",
     "unavailable": "利用不可",
     "backendNeeded": "バックエンドが必要",
-    "notBundled": "未同梱",
     "setupNeeded": "設定が必要",
     "cancel": "キャンセル",
     "cancelling": "キャンセル中…",
@@ -18,7 +17,6 @@
     "developmentBuild": "開発ビルド"
   },
   "app": {
-    "noSources": "音声を出力中のアプリケーションが見つかりませんでした。",
     "routeRestored": "元の音声経路を復元しました。",
     "engineInstalled": "音声エンジンをインストールしました。",
     "engineRemoved": "音声エンジンを削除しました。",
@@ -41,13 +39,22 @@
     "updating": "更新中…"
   },
   "onboarding": {
-    "supportStep": "2 ステップ中 1",
-    "supportStepWithAudio": "3 ステップ中 1",
-    "platformAudioStep": "3 ステップ中 2",
-    "engineStep": "2 ステップ中 2",
-    "engineStepWithAudio": "3 ステップ中 3",
+    "targetStep": "3 ステップ中 1",
+    "targetStepWithAudio": "4 ステップ中 1",
+    "supportStep": "3 ステップ中 2",
+    "supportStepWithAudio": "4 ステップ中 2",
+    "platformAudioStep": "4 ステップ中 3",
+    "engineStep": "3 ステップ中 3",
+    "engineStepWithAudio": "4 ステップ中 4",
+    "targetKicker": "音声アプリ",
+    "targetTitle": "音声の取得元を選択してください。",
+    "targetBody": "Persona Voice は選択したアプリだけをキャプチャします。後から設定 → オーディオで変更できます。",
+    "chatgptTitle": "ChatGPT",
+    "chatgptBody": "ChatGPT デスクトップアプリと、その Codex 体験の音声モードを使用します。",
+    "grokBotTitle": "Grok Bot",
+    "grokBotBody": "Grok Bot デスクトップアプリ内の Bot と音声チャットを使用します。",
     "supportKicker": "PERSONA VOICE へようこそ",
-    "supportTitle": "ChatGPT と Codex の出力音声を置き換える。",
+    "supportTitle": "ChatGPT、Codex、Grok Bot の出力音声を置き換える。",
     "supportBody": "より多くの人にプロジェクトを知ってもらうため、リポジトリを開いてスターを付けるか、作者を X でフォローできます。",
     "githubOpened": "GitHub を開きました",
     "starGithub": "GitHub でスター",
@@ -75,7 +82,7 @@
   "platformAudio": {
     "kicker": "システム音声経路",
     "linuxTitle": "保護された Linux 音声経路を設定します。",
-    "linuxBody": "Persona Voice は ChatGPT と Codex 用に、所有権が明確なユーザー単位の PipeWire/WirePlumber ポリシーを一度だけインストールします。管理外のポリシーファイルは置き換えません。",
+    "linuxBody": "Persona Voice は ChatGPT、Codex、Grok Bot 用に、所有権が明確なユーザー単位の PipeWire/WirePlumber ポリシーを一度だけインストールします。管理外のポリシーファイルは置き換えません。",
     "linuxRouteName": "所有する PipeWire / WirePlumber 経路",
     "linuxOwnedFact": "ユーザー単位で一度だけインストール",
     "linuxRestartFact": "ユーザー音声セッションを一度再起動（アプリは開いたまま）",
@@ -84,7 +91,7 @@
     "windowsSinkName": "VB-CABLE Input",
     "windowsInstallerFact": "VB-Audio 公式ドライバを別途インストール",
     "windowsDownloadStep": "VB-CABLE をダウンロードし、管理者としてセットアップを実行してから Windows を再起動します。",
-    "windowsOpenAppStep": "ChatGPT または Codex を開き、音声モードか音声再生を開始します。",
+    "windowsOpenAppStep": "{app} を開き、音声モードか音声再生を開始します。",
     "windowsAssignStep": "Windows の音量ミキサーで、そのアプリの出力を CABLE Input に設定します。",
     "windowsVerifyStep": "この画面に戻り、稼働中の経路を検証します。",
     "statusReady": "準備完了",
@@ -114,7 +121,7 @@
     "windowsSettingsNotice": "VB-CABLE は VB-Audio からインストールするサードパーティ製ソフトウェアです。VB-CABLE を削除する前に、音量ミキサーで各アプリの出力を「既定」に戻してください。"
   },
   "home": {
-    "armedDetail": "ChatGPT または Codex で音声モードを開いてください。会話が接続されるまで元の音声経路は変更されません。",
+    "armedDetail": "{app} で音声モードを開いてください。会話が接続されるまで元の音声経路は変更されません。",
     "runningDetail": "リアルタイム音声を {voice} に変換しています。",
     "selectedVoice": "選択した声",
     "startingDetail": "ローカル音声エンジンを読み込み、ウォームアップしています。準備中は安全にキャンセルできます。",
@@ -123,8 +130,8 @@
     "readyDetail": "一度開始した後は、通常どおり音声モードを使えます。変換と履歴はこのデバイス内に留まります。",
     "blockedDetailOne": "開始する前に {count} 件のチェックを確認してください。",
     "blockedDetailOther": "開始する前に {count} 件のチェックを確認してください。",
-    "title": "ChatGPT と Codex の出力音声を置き換える。",
-    "intro": "声を選んで Persona Voice を起動すれば、あとは通常どおり音声モードを使えます。変換はこのデバイス上で実行されます。",
+    "title": "ChatGPT、Codex、Grok Bot を好きな声に。",
+    "intro": "アプリと声を選んで Persona Voice を起動すれば、あとは通常どおり音声モードを使えます。変換はこのデバイス上で実行されます。",
     "relayControl": "音声リレー操作",
     "selectVoice": "変換先の声を選択",
     "reviewSetup": "設定を確認",
@@ -163,7 +170,7 @@
     "stopVoice": "音声変換を停止",
     "startVoice": "音声変換を開始",
     "codexSession": "Codex リアルタイムセッション",
-    "automaticApps": "ChatGPT / Codex を自動選択"
+    "automaticApps": "選択した音声アプリ"
   },
   "history": {
     "title": "履歴",
@@ -202,8 +209,8 @@
     "sections": {
       "audio": {
         "label": "音声",
-        "description": "アプリケーションと経路方式を選びます。",
-        "keywords": "入力元 ChatGPT Codex 取得 経路 アプリ サーバー 入力 出力"
+        "description": "Persona Voice が声を置き換えるアプリを選びます。",
+        "keywords": "入力元 ChatGPT Codex Grok Bot 取得 経路 アプリ サーバー 入力 出力"
       },
       "voice": {
         "label": "音声モデル",
@@ -228,19 +235,12 @@
     },
     "audio": {
       "unavailableTitle": "このシステムでは透過リレーを利用できません",
-      "sourceMethod": "入力方式",
-      "sourceMethodBody": "変換音声を再生する前に、Persona Voice が元の経路を所有または抑制できる必要があります。",
-      "desktopTitle": "デスクトップアプリケーション",
-      "desktopBody": "音声モードの使い方を変えずに ChatGPT または Codex を取得します。",
-      "codexTitle": "Codex リアルタイムセッション",
-      "codexBody": "ハードウェア再生前の Codex リアルタイム PCM ストリームを所有します。",
-      "application": "アプリケーション",
-      "applicationBody": "自動モードは一致する ChatGPT と Codex のプロセスツリーを追跡します。",
-      "pinnedSource": "安定した実行ファイルまたはストリーム ID に固定されています。",
-      "automaticSource": "一致するリアルタイム音声プロセスをすべて使用します。",
-      "automaticApps": "ChatGPT / Codex を自動選択",
-      "sourceLabel": "デスクトップ音声入力元",
-      "refreshApps": "アプリケーションを更新",
+      "application": "音声アプリ",
+      "applicationBody": "Persona Voice が読み上げ音声を置き換えるデスクトップアプリを選択します。",
+      "chatgptTitle": "ChatGPT",
+      "chatgptBody": "Codex 音声モードを含む ChatGPT デスクトップのプロセスツリーを追跡します。",
+      "grokBotTitle": "Grok Bot",
+      "grokBotBody": "公式 Grok Bot デスクトップのプロセスツリーと音声チャットを追跡します。",
       "routeGuarantee": "経路の保証",
       "routeGuaranteeBody": "取得、抑制、変換、出力のいずれかが欠けると開始をブロックします。",
       "processCapture": "プロセス音声の取得",

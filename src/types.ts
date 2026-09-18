@@ -2,6 +2,7 @@ import type { UiLocale } from "./i18n";
 
 export type TabId = "home" | "history" | "settings";
 export type SourceMode = "codex-app-server" | "desktop-application";
+export type TargetApp = "chatgpt" | "grok-bot";
 export type VoiceModelId = "seed-vc" | "chatterbox";
 export type RuntimeState = "stopped" | "starting" | "armed" | "engaging" | "running" | "stopping" | "faulted";
 
@@ -19,6 +20,7 @@ export type UpdateState =
 export interface Settings {
   uiLocale: UiLocale | null;
   sourceMode: SourceMode;
+  targetApp: TargetApp;
   sourceId: string | null;
   sourceName: string | null;
   selectedModelId: VoiceModelId;
@@ -224,6 +226,7 @@ export interface VoiceBridge {
   setAutostart(enabled: boolean): Promise<{ supported: boolean; enabled: boolean }>;
   selectSource(source: Pick<AudioSource, "id" | "name"> | null): Promise<Settings>;
   selectSourceMode(mode: SourceMode): Promise<Settings>;
+  selectTargetApp(targetApp: TargetApp): Promise<Settings>;
   selectVoice(id: string): Promise<Settings>;
   selectModel(id: VoiceModelId): Promise<Settings>;
   voiceSample(id: string): Promise<{ voice: VoicePreset; data: Uint8Array; mimeType: string }>;

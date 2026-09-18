@@ -45,10 +45,10 @@ function readyFrame(routeId = "chatgpt") {
     supportsPrelinkedIngress: true,
     supportsDynamicProcessStreams: true,
     supportsCrashRecovery: true,
-    policyVersion: 2,
+    policyVersion: 3,
     routeOwner: "wireplumber-prelink-policy",
     routeId,
-    supportedRouteIds: ["chatgpt", "codex"],
+    supportedRouteIds: ["chatgpt", "codex", "grok-bot"],
     armed: true,
     state: "armed",
     originalSuppressed: false,
@@ -94,10 +94,10 @@ function fixture(child = fakeChild()) {
       supportsPrelinkedIngress: true,
       supportsDynamicProcessStreams: true,
       supportsCrashRecovery: true,
-      policyVersion: 2,
+      policyVersion: 3,
       routeOwner: "wireplumber-prelink-policy",
       routeId: "chatgpt",
-      supportedRouteIds: ["chatgpt", "codex"],
+      supportedRouteIds: ["chatgpt", "codex", "grok-bot"],
       policyProbeVerified: true,
     }),
     processResolver: async () => ({ routeId: "chatgpt", rootPids: [10], pids: [10, 11, 12] }),
@@ -130,13 +130,29 @@ test("Linux resolver scopes automatic selection to process descendants and exclu
 test("Linux automatic source selection rejects simultaneous ChatGPT and Codex identities", async () => {
   assert.equal(linuxRouteId("/opt/ChatGPT/chatgpt"), "chatgpt");
   assert.equal(linuxRouteId("/opt/Codex/codex"), "codex");
+  assert.equal(linuxRouteId("/opt/Grok Bot/grok-bot"), "grok-bot");
   await assert.rejects(() => resolveLinuxProcessTree({}, {
     ownProcessId: 99,
     processes: [
       { pid: 10, parentId: 1, executable: "/opt/ChatGPT/chatgpt", command: "chatgpt" },
       { pid: 20, parentId: 1, executable: "/opt/Codex/codex", command: "codex" },
     ],
-  }), /choose one.*explicitly/i);
+  }), /multiple ChatGPT/i);
+});
+
+test("Linux resolver selects the Grok Bot route without mixing ChatGPT processes", async () => {
+  assert.deepEqual(await resolveLinuxProcessTree({ targetApp: "grok-bot" }, {
+    ownProcessId: 99,
+    processes: [
+      { pid: 10, parentId: 1, executable: "/opt/ChatGPT/chatgpt", command: "chatgpt" },
+      { pid: 20, parentId: 1, executable: "/opt/Grok Bot/grok-bot", command: "grok-bot" },
+      { pid: 21, parentId: 20, executable: "/opt/Grok Bot/chrome", command: "renderer" },
+    ],
+  }), {
+    routeId: "grok-bot",
+    rootPids: [20],
+    pids: [20, 21],
+  });
 });
 
 test("Linux resolver decodes the existing PipeWire source identity contract", async () => {

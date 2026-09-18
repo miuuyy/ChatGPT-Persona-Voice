@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve Codex Persona Voice. This is an experimental, fail-closed audio project,
+Thanks for helping improve Persona Voice. This is an experimental, fail-closed audio project,
 so a useful contribution includes truthful capability boundaries and recovery behavior, not only a
 working happy path.
 

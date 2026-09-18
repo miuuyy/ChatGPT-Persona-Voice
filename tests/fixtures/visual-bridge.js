@@ -11,6 +11,7 @@
       selectedModelId: "seed-vc",
       windowsManualRouteConfigured: false,
       sourceMode: "desktop-application",
+      targetApp: "chatgpt",
       sourceId: null,
       sourceName: null,
       selectedVoiceId: "voicevox-shikoku-metan-normal",
@@ -42,7 +43,7 @@
       queuedAudioMs: 0,
       ready: true,
       checks: [
-        { id: "source", label: "Audio source", ready: true, code: "ready", detail: "Automatic ChatGPT/Codex process tree is ready for muted capture" },
+        { id: "source", label: "Audio source", ready: true, code: "ready", detail: "ChatGPT process tree is ready for muted capture" },
         { id: "suppression", label: "Original suppression", ready: true, code: "ready", detail: "Muted Core Audio tap is built and the selected process tree is available" },
         { id: "engine", label: "Voice engine", ready: true, code: "ready", detail: "Shikoku Metan · Seed-VC tiny · 10 steps · Apple MPS" },
         { id: "output", label: "Converted output", ready: true, code: "ready", detail: "Core Audio output helper and default device passed self-test" },
@@ -104,6 +105,7 @@
     setAutostart: async (enabled) => { state.settings.launchAtLogin = enabled; state.autostart.enabled = enabled; publish(); return clone(state.autostart); },
     selectSource: async (source) => { state.settings.sourceId = source?.id ?? null; state.settings.sourceName = source?.name ?? null; publish(); return clone(state.settings); },
     selectSourceMode: async (mode) => { state.settings.sourceMode = mode; publish(); return clone(state.settings); },
+    selectTargetApp: async (targetApp) => { state.settings.sourceMode = "desktop-application"; state.settings.targetApp = targetApp; state.settings.sourceId = null; state.settings.sourceName = null; publish(); return clone(state.settings); },
     selectModel: async (id) => {
       const model = state.models.find(candidate => candidate.id === id);
       if (!model?.supported) throw new Error("Unsupported model");

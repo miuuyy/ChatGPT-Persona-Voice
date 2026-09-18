@@ -11,6 +11,7 @@ const {
 const format = Object.freeze({ sampleRate: 48_000, channels: 2, sampleFormat: "f32le" });
 const settings = Object.freeze({
   sourceMode: "desktop-application",
+  targetApp: "chatgpt",
   sourceId: "chatgpt.exe:10",
   sourceName: "ChatGPT",
 });
@@ -314,6 +315,26 @@ test("Windows lifecycle refuses to switch target ownership before manual route r
   );
   assert.equal(value.baseCloseCount(), 0);
   assert.equal(value.lifecycle.snapshot().state, "standby");
+});
+
+test("Windows lifecycle treats a ChatGPT to Grok Bot switch as new route ownership", async () => {
+  const value = fixture();
+  await value.lifecycle.startStandby(settings);
+  await assert.rejects(
+    value.lifecycle.acquire(
+      {
+        ...settings,
+        targetApp: "grok-bot",
+        sourceId: null,
+        sourceName: null,
+      },
+      () => {},
+      () => {},
+    ),
+    (error) => error.code === "windows_source_change_requires_route_restore",
+  );
+  assert.equal(value.baseCloseCount(), 0);
+  assert.equal(value.lifecycle.snapshot().manualRestoreRequired, true);
 });
 
 test("Windows Stop retains the native guard when standby output cannot be restored", async () => {

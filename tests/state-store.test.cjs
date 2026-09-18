@@ -23,6 +23,7 @@ test("state store initializes safe defaults and migrates pre-onboarding state", 
   assert.equal(store.read().settings.keepRunningOnClose, false);
   assert.equal(store.read().settings.uiLocale, null);
   assert.equal(store.read().settings.sourceMode, "desktop-application");
+  assert.equal(store.read().settings.targetApp, "chatgpt");
   assert.equal(store.read().settings.selectedVoiceId, "voicevox-shikoku-metan-normal");
   assert.equal(store.read().settings.selectedVoiceName, "Shikoku Metan");
   assert.deepEqual(store.read().onboarding, {
@@ -71,6 +72,9 @@ test("state store validates and atomically persists settings, identity, and onbo
   }
   store.setSetting("uiLocale", null);
   assert.equal(store.read().settings.uiLocale, null);
+  store.setSetting("targetApp", "grok-bot");
+  assert.equal(createStateStore(filePath).read().settings.targetApp, "grok-bot");
+  assert.throws(() => store.setSetting("targetApp", "other"), /Unknown target application/);
 
   assert.throws(() => store.setSetting("sourceId", "process:darwin:test"), /selected together/);
   const current = store.read().settings;

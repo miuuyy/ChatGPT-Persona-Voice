@@ -1,6 +1,6 @@
 # Security policy
 
-Codex Persona Voice is experimental software that controls local audio routes and executes a local
+Persona Voice is experimental software that controls local audio routes and executes a local
 model worker. There is no production-supported release or security-response SLA.
 
 ## Supported versions
@@ -65,7 +65,7 @@ mitigation.
 
 ## Security boundaries and limitations
 
-- Local-first inference does not make ChatGPT/Codex source sessions offline.
+- Local-first inference does not make ChatGPT/Codex or Grok Bot source sessions offline.
 - Application data is access-restricted where supported but is not encrypted by the app.
 - Logs may contain diagnostic paths/errors. The main JSONL log has bounded size rotation; the
   fatal-startup log is capped at 512 KiB plus one archive. Neither has automatic time-based expiry.

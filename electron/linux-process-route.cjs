@@ -6,18 +6,28 @@ const { execFile, spawn } = require("node:child_process");
 const { promisify } = require("node:util");
 const { NativeFrameParser } = require("./native-protocol.cjs");
 const { probeNativeHelper, terminateChild } = require("./native-helper.cjs");
+const {
+  DEFAULT_TARGET_APP,
+  targetAppLabel,
+  targetAppLinuxRouteIds,
+} = require("./target-apps.cjs");
 
 const execFileAsync = promisify(execFile);
 const PROBE_CACHE_MS = 5_000;
-const VOICE_PROCESS_PATTERN = /(?:^|[\/\s])(?:chatgpt|codex|openai[ -]codex|codex[ -]desktop)(?:[\s\/]|$)/i;
-const SUPPORTED_ROUTE_IDS = Object.freeze(["chatgpt", "codex"]);
+const POLICY_VERSION = 3;
+const SUPPORTED_ROUTE_IDS = Object.freeze(["chatgpt", "codex", "grok-bot"]);
 
 function linuxRouteId(...values) {
   const text = values.filter(Boolean).join(" ");
   const chatgpt = /(?:^|[\/\s_-])chat-?gpt(?:[\/\s_.-]|$)/i.test(text);
   const codex = /(?:^|[\/\s_-])(?:openai[\s_-]*)?codex(?:[\/\s_.-]|$)/i.test(text);
-  if (chatgpt === codex) return null;
-  return chatgpt ? "chatgpt" : "codex";
+  const grokBot = /(?:^|[\/\s_-])grok[\s_-]?bot(?:[\/\s_.-]|$)/i.test(text);
+  const matched = [
+    chatgpt ? "chatgpt" : null,
+    codex ? "codex" : null,
+    grokBot ? "grok-bot" : null,
+  ].filter(Boolean);
+  return matched.length === 1 ? matched[0] : null;
 }
 
 function decodeBase64Url(value) {
@@ -115,25 +125,33 @@ async function resolveLinuxProcessTree(settings, {
   ownProcessId = process.pid,
 } = {}) {
   const entries = processes ?? readLinuxProcesses();
+  const targetApp = settings?.targetApp ?? DEFAULT_TARGET_APP;
+  const allowedRouteIds = new Set(targetAppLinuxRouteIds(targetApp));
   let candidates = [];
   let routeId = null;
   if (settings?.sourceId?.startsWith("pipewire:stream:")) {
     const identity = pipeWireIdentity(settings.sourceId);
     routeId = linuxRouteId(identity?.application, identity?.binary, identity?.node);
-    if (!routeId) throw new Error("Linux supports explicit ChatGPT or Codex sources; the selected PipeWire identity is unsupported");
+    if (!routeId || !allowedRouteIds.has(routeId)) {
+      throw new Error(`The selected PipeWire source does not belong to ${targetAppLabel(targetApp)}`);
+    }
     candidates = await pipeWireProcessIds(settings.sourceId, { run });
   } else if (settings?.sourceId?.startsWith("process:linux:")) {
     const executable = decodeBase64Url(settings.sourceId.slice("process:linux:".length));
     if (!executable) throw new Error("The selected Linux process source id is invalid");
     routeId = linuxRouteId(executable);
-    if (!routeId) throw new Error("Linux supports explicit ChatGPT or Codex process sources only");
+    if (!routeId || !allowedRouteIds.has(routeId)) {
+      throw new Error(`The selected Linux process does not belong to ${targetAppLabel(targetApp)}`);
+    }
     candidates = entries.filter((entry) => entry.executable === executable).map((entry) => entry.pid);
   } else {
-    const matched = entries.filter((entry) =>
-      entry.pid !== ownProcessId && VOICE_PROCESS_PATTERN.test(`${entry.executable} ${entry.command}`));
+    const matched = entries.filter((entry) => {
+      const candidateRouteId = linuxRouteId(entry.executable, entry.command);
+      return entry.pid !== ownProcessId && allowedRouteIds.has(candidateRouteId);
+    });
     const routeIds = new Set(matched.map((entry) => linuxRouteId(entry.executable, entry.command)).filter(Boolean));
     if (routeIds.size > 1) {
-      throw new Error("Both ChatGPT and Codex are running; choose one Linux voice source explicitly");
+      throw new Error(`Multiple ${targetAppLabel(targetApp)} audio routes are active; close the unused application`);
     }
     routeId = [...routeIds][0] ?? null;
     candidates = matched.filter((entry) => linuxRouteId(entry.executable, entry.command) === routeId).map((entry) => entry.pid);
@@ -217,7 +235,7 @@ class LinuxProcessRoute {
             result.supportsProcessScopedRouting !== true || result.supportsRollbackProof !== true ||
             result.supportsPrelinkedIngress !== true || result.supportsDynamicProcessStreams !== true ||
             result.supportsCrashRecovery !== true || result.policyProbeVerified !== true ||
-            result.policyVersion !== 2 || result.routeOwner !== "wireplumber-prelink-policy" ||
+            result.policyVersion !== POLICY_VERSION || result.routeOwner !== "wireplumber-prelink-policy" ||
             !Array.isArray(result.supportedRouteIds) ||
             SUPPORTED_ROUTE_IDS.some((routeId) => !result.supportedRouteIds.includes(routeId))) {
           throw new Error("Capture self-test did not prove pre-linked WirePlumber routing and crash recovery");
@@ -265,7 +283,7 @@ class LinuxProcessRoute {
           code: "desktop_source_not_running",
           detail: settings?.sourceName
             ? `${settings.sourceName} is not currently running`
-            : "Start ChatGPT or Codex, or select another running application",
+            : `Start ${targetAppLabel(settings?.targetApp)} before starting Persona Voice`,
         };
       }
       return {
@@ -273,7 +291,7 @@ class LinuxProcessRoute {
         code: "ready",
         detail: settings?.sourceName
           ? `${settings.sourceName} is ready for native PipeWire process routing`
-          : "Automatic ChatGPT/Codex process scope is ready for native PipeWire routing",
+          : `${targetAppLabel(settings?.targetApp)} process scope is ready for native PipeWire routing`,
       };
     } catch (error) {
       return {
@@ -303,7 +321,7 @@ class LinuxProcessRoute {
     const processes = await this.resolveProcesses(settings);
     if (signal?.aborted) throw signal.reason instanceof Error ? signal.reason : new Error("PipeWire route acquisition was cancelled");
     if (!Array.isArray(processes.pids) || processes.pids.length === 0) {
-      throw new Error(`${settings?.sourceName || "ChatGPT/Codex"} stopped before capture began`);
+      throw new Error(`${settings?.sourceName || targetAppLabel(settings?.targetApp)} stopped before capture began`);
     }
     if (!SUPPORTED_ROUTE_IDS.includes(processes.routeId)) {
       throw new Error("The selected Linux source is not bound to a supported pre-linked route");
@@ -346,7 +364,7 @@ class LinuxProcessRoute {
               message.supportsCaptureProof !== true || message.supportsProcessScopedRouting !== true ||
               message.supportsRollbackProof !== true || message.supportsPrelinkedIngress !== true ||
               message.supportsDynamicProcessStreams !== true || message.supportsCrashRecovery !== true ||
-              message.policyVersion !== 2 || message.routeOwner !== "wireplumber-prelink-policy" ||
+              message.policyVersion !== POLICY_VERSION || message.routeOwner !== "wireplumber-prelink-policy" ||
               message.routeId !== processes.routeId ||
               message.armed !== true || message.state !== "armed" ||
               message.originalSuppressed !== false || message.tapActive !== false ||

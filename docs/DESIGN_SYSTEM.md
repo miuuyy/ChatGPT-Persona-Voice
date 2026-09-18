@@ -1,6 +1,6 @@
 # Design system
 
-Codex Persona Voice uses a compact, dark desktop UI inspired by the information density and calm
+Persona Voice uses a compact, dark desktop UI inspired by the information density and calm
 workspace structure associated with Codex-style tools. It is an original Persona Voice interface,
 not a replica or official OpenAI surface.
 
@@ -8,9 +8,9 @@ not a replica or official OpenAI surface.
 
 - The product name, waveform mark, app icon, layout implementation, CSS tokens, and UI copy are
   original Persona Voice materials unless a notice says otherwise.
-- No OpenAI, ChatGPT, or Codex proprietary logo, icon pack, font, illustration, animation, or source
+- No OpenAI, ChatGPT, Codex, xAI, Grok, Grok Bot, or Cursor proprietary logo, icon pack, font, illustration, animation, or source
   asset is bundled.
-- Product references to ChatGPT and Codex describe compatible source applications. They must not
+- Product references to ChatGPT, Codex, and Grok Bot describe compatible source applications. They must not
   imply affiliation, endorsement, or ownership.
 - Do not import screenshots or traced assets from another product to make the UI feel more exact.
   Extend the local token/component language instead.

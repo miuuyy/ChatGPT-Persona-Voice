@@ -1,7 +1,7 @@
 # Third-party notices
 
 This is the repository's single human-readable inventory for third-party code, executables, model
-artifacts, voice references, and character material. The original Codex Persona Voice launcher is
+artifacts, voice references, and character material. The original Persona Voice launcher is
 licensed separately under [LICENSE](LICENSE). Machine-verifiable revisions, hashes, and required
 voice credits remain in `engine/seed-vc/model-lock.json` and `voices/manifest.json`.
 

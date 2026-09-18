@@ -1,6 +1,6 @@
 # Privacy
 
-Codex Persona Voice is local-first during active conversion, but “local-first” is not the same as
+Persona Voice is local-first during active conversion, but “local-first” is not the same as
 “no network ever.” This document separates the relay's behavior from setup, external links, and the
 source application's own network traffic.
 
@@ -32,7 +32,7 @@ source application's own network traffic.
 | Model runtime | Python environment, model files, install manifest | Source `runtime/seed-vc/` in development; user-data `engine/seed-vc/` when packaged | Until manually removed or **Remove engine** |
 | Voice references | Selected target conditioning samples | Repository/package resources | Shipped with source/artifact |
 | Linux audio policy | Managed PipeWire/WirePlumber config plus activation receipt | Per-user XDG config/data/state roots | Until in-app **Remove route…**, `linux-audio-policy.cjs remove --reload`, or account removal |
-| Windows per-app output policy | Assignment of ChatGPT/Codex to VB-CABLE Input | Windows Sound/Volume Mixer policy | Until restored by the user/OS |
+| Windows per-app output policy | Assignment of the selected ChatGPT or Grok Bot app to VB-CABLE Input | Windows Sound/Volume Mixer policy | Until restored by the user/OS |
 
 The default user-data root is Electron's application-data location under `Codex Persona Voice`.
 Developers can override it with an absolute `CODEX_PERSONA_VOICE_DATA_DIR` path.
@@ -134,16 +134,17 @@ detached local worker can install it. Development runs do not check for updates.
 repository is private, an unauthenticated client receives no usable release metadata; no GitHub
 token is stored or sent by Persona Voice.
 
-The first-run UI requires an explicit `en`, `ja`, or `zh-CN` interface-language choice before the
-support and engine steps; it does not infer a locale from the OS. The language remains local in the
+The first-run UI requires an explicit `en`, `ja`, or `zh-CN` interface-language choice, followed by
+an explicit ChatGPT or Grok Bot source choice, before the support and engine steps; it does not infer
+a locale or source app from the OS. Both choices remain local in the
 settings file and can be changed later. The support step optionally opens the fixed repository and
 creator X profile after explicit clicks; neither action is required to continue. It stores only
 `githubOpened`/`xOpened` booleans and cannot verify a star/follow or read either account.
 The UI can also open a voice terms URL, repository URL, or the fixed official VB-CABLE page after an explicit click. The OS browser
 then owns those requests.
 
-ChatGPT/Codex voice sessions have their own provider network behavior. Capturing their local output
-does not make those source applications offline and does not change their privacy terms.
+ChatGPT/Codex and Grok Bot voice sessions have their own provider network behavior. Capturing their
+local output does not make those source applications offline and does not change their privacy terms.
 
 ### Development server
 
@@ -171,7 +172,7 @@ data:
 
 1. stop and quit the app cleanly;
 2. use Clear history first if the UI is available;
-3. on Windows, restore ChatGPT/Codex from VB-CABLE Input to **Default** or the physical output
+3. on Windows, restore the selected ChatGPT or Grok Bot app from VB-CABLE Input to **Default** or the physical output
    in Volume Mixer; remove VB-CABLE separately only if it is no longer needed by other software;
 4. on Linux, use **Settings → Application → Remove route…** (or
    `node scripts/linux-audio-policy.cjs remove --reload` in development) before deleting the app;

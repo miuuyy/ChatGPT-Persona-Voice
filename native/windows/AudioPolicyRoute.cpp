@@ -482,7 +482,7 @@ int runGuard(const std::vector<DWORD>& roots, const std::wstring& sinkId) {
   if (current.anyTargetSessionOutsideSink) {
     return fail(
         "windows_target_route_not_isolated",
-        "Route ChatGPT/Codex to CABLE Input (VB-Audio Virtual Cable) in Windows Volume Mixer before starting voice",
+        "Route the selected application to CABLE Input (VB-Audio Virtual Cable) in Windows Volume Mixer before starting voice",
         false);
   }
   bool engaged = current.anyTargetSession;

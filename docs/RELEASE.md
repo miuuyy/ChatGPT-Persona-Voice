@@ -147,7 +147,7 @@ Windows still needs:
 - exact Windows/NVIDIA version qualification;
 - qualification and recovery coverage for the current in-app route UX: the verifier does not mutate
   persistent per-app routing, current live-session notifications are not guaranteed pre-audio, and
-  users assign ChatGPT/Codex to CABLE Input in Volume Mixer and restore it before removing VB-CABLE;
+  users assign the selected ChatGPT or Grok Bot application to CABLE Input in Volume Mixer and restore it before removing VB-CABLE;
 - proof that standby remains audible and bounded, conversion never leaks the original source, and
   route loss/manual restoration cannot be mistaken for success;
 - clean physical-Windows UAC/install/rollback/audio and NVIDIA execution evidence; source, CI, and

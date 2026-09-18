@@ -8,6 +8,7 @@ const {
   resolveDefaultVoiceProcessTree,
   resolveSelectedProcessTree,
 } = require("./source-discovery.cjs");
+const { targetAppLabel } = require("./target-apps.cjs");
 
 const PROBE_CACHE_MS = 5_000;
 
@@ -124,7 +125,10 @@ class MacProcessRoute {
   resolveProcesses(settings) {
     return settings?.sourceId
       ? this.processResolver({ sourceId: settings.sourceId, platform: this.platform })
-      : this.defaultProcessResolver({ platform: this.platform });
+      : this.defaultProcessResolver({
+          platform: this.platform,
+          targetApp: settings?.targetApp,
+        });
   }
 
   async probe(settings) {
@@ -138,7 +142,7 @@ class MacProcessRoute {
           code: "desktop_source_not_running",
           detail: settings?.sourceName
             ? `${settings.sourceName} is not currently running`
-            : "Start ChatGPT or Codex, or select another running application",
+            : `Start ${targetAppLabel(settings?.targetApp)} before starting Persona Voice`,
         };
       }
       return {
@@ -146,7 +150,7 @@ class MacProcessRoute {
         code: "ready",
           detail: settings?.sourceName
             ? `${settings.sourceName} process tree is ready for deferred muted capture`
-            : "Automatic ChatGPT/Codex process tree is ready for deferred muted capture",
+            : `${targetAppLabel(settings?.targetApp)} process tree is ready for deferred muted capture`,
       };
     } catch (error) {
       return {
@@ -176,11 +180,11 @@ class MacProcessRoute {
       ? signal.reason
       : new Error("Muted-route acquisition was cancelled");
     if (processes.pids.length === 0) {
-      throw new Error(`${settings.sourceName || "ChatGPT/Codex"} stopped before capture began`);
+      throw new Error(`${settings.sourceName || targetAppLabel(settings?.targetApp)} stopped before capture began`);
     }
 
     if (!Array.isArray(processes.rootPids) || processes.rootPids.length === 0) {
-      throw new Error(`${settings.sourceName || "ChatGPT/Codex"} application root stopped before capture began`);
+      throw new Error(`${settings.sourceName || targetAppLabel(settings?.targetApp)} application root stopped before capture began`);
     }
     const args = processes.rootPids.flatMap((pid) => ["--root-pid", String(pid)]);
     const child = this.spawnProcess(this.helperPath, args, {

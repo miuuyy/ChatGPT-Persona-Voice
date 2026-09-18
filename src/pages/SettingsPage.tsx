@@ -11,8 +11,6 @@ export function SettingsPage({
   snapshot,
   section,
   busy,
-  sources,
-  sourceLoading,
   playingKey,
   onSection,
   onSetting,
@@ -20,9 +18,7 @@ export function SettingsPage({
   onInstallEngine,
   onCancelEngineInstall,
   onRemoveEngine,
-  onMode,
-  onDiscoverSources,
-  onSelectSource,
+  onTargetApp,
   onSelectVoice,
   onSelectModel,
   onPreviewVoice,
@@ -114,15 +110,13 @@ export function SettingsPage({
             busy={busy}
             onAutostart={onAutostart}
             onCancelEngineInstall={onCancelEngineInstall}
-            onDiscoverSources={onDiscoverSources}
-            onMode={onMode}
+            onTargetApp={onTargetApp}
             onInstallEngine={onInstallEngine}
             onOpenData={onOpenData}
             onOpenRepository={onOpenRepository}
             onPreviewVoice={onPreviewVoice}
             onRequestClear={onRequestClear}
             onRemoveEngine={onRemoveEngine}
-            onSelectSource={onSelectSource}
             onSelectVoice={onSelectVoice}
             onSelectModel={onSelectModel}
             onSetting={onSetting}
@@ -130,8 +124,6 @@ export function SettingsPage({
             playingKey={playingKey}
             section={section}
             snapshot={snapshot}
-            sourceLoading={sourceLoading}
-            sources={sources}
           />
         </div>
       </div>

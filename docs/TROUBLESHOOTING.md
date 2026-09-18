@@ -164,7 +164,7 @@ it eligible. Additional CABLE A/B/C/D products are not substituted for the base 
 The in-app system-audio screen guides verification, but the verifier observes current live sessions
 and does not mutate per-app policy. With Persona Voice stopped:
 
-1. open ChatGPT/Codex and start real voice/audio playback so a live session exists;
+1. open the selected ChatGPT or Grok Bot application and start real voice/audio playback so a live session exists;
 2. open **Settings → System → Sound → Volume mixer**;
 3. set the selected app's output to **CABLE Input (VB-Audio Virtual Cable)**;
 4. return to Persona Voice and choose **Verify route**; bounded standby starts only after live proof;
@@ -205,11 +205,11 @@ TCC is not bypassed. macOS older than 14.2 cannot use the process-tap route.
 
 ## Source application is not found
 
-- Start ChatGPT or Codex before refreshing sources.
-- If both are running, explicitly choose one where the platform requires a unique route.
-- Re-select an app after its executable identity moves or changes.
+- Start the selected ChatGPT or Grok Bot application before refreshing readiness.
+- Verify **Settings → Audio → Voice application** matches the app whose voice mode is open.
+- Re-select the app after its executable identity moves or changes.
 - Verify that the source and Persona Voice run in the same user audio session.
-- On Linux, check that the selected PipeWire identity maps unambiguously to `chatgpt` or `codex`.
+- On Linux, check that the selected PipeWire identity maps unambiguously to `chatgpt`, `codex`, or `grok-bot`.
 
 Discovery proves identity only. Readiness additionally requires the platform route, engine, and
 output checks.

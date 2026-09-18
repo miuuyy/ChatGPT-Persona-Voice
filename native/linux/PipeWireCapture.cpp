@@ -38,10 +38,10 @@ constexpr std::uint32_t kSampleRate = 48'000;
 constexpr std::uint16_t kChannels = 2;
 constexpr std::uint32_t kMaximumFrames = 8'192;
 constexpr std::size_t kCaptureQueueSlots = 64;
-constexpr std::uint32_t kPolicyVersion = 2;
+constexpr std::uint32_t kPolicyVersion = 3;
 constexpr auto kControlInterval = std::chrono::milliseconds(25);
 constexpr auto kMuteProofTimeout = std::chrono::seconds(2);
-constexpr std::array<const char*, 2> kRouteIds{"chatgpt", "codex"};
+constexpr std::array<const char*, 3> kRouteIds{"chatgpt", "codex", "grok-bot"};
 
 std::atomic<bool> stopRequested{false};
 int wakeFd = -1;
@@ -219,7 +219,7 @@ class PipeWireCapture {
          << ",\"policyVersion\":" << kPolicyVersion
          << ",\"routeOwner\":\"wireplumber-prelink-policy\""
          << ",\"routeId\":\"" << cpv::linux_audio::jsonEscape(routeId_) << "\""
-         << ",\"supportedRouteIds\":[\"chatgpt\",\"codex\"]"
+         << ",\"supportedRouteIds\":[\"chatgpt\",\"codex\",\"grok-bot\"]"
          << ",\"policyProbeVerified\":" << (selfTest ? "true" : "false");
     if (!selfTest) {
       json << ",\"armed\":true,\"state\":\"armed\""
@@ -572,7 +572,7 @@ class PipeWireCapture {
             PW_KEY_TARGET_OBJECT, ingressNode_.c_str(),
             "chatgpt.persona.voice.capture-guard", "true",
             "chatgpt.persona.voice.route", routeId_.c_str(),
-            "chatgpt.persona.voice.policy-version", "2",
+            "chatgpt.persona.voice.policy-version", "3",
             nullptr));
     if (captureStream_ == nullptr) return fail(error, cpv::linux_audio::errnoMessage("Unable to create ingress capture"));
     pw_stream_add_listener(captureStream_, &captureListener_, &captureEvents_, this);
@@ -726,7 +726,8 @@ class PipeWireCapture {
             PW_KEY_NODE_DESCRIPTION, "ChatGPT Persona Voice pre-link policy probe",
             PW_KEY_NODE_AUTOCONNECT, "true",
             PW_KEY_NODE_DONT_RECONNECT, "true",
-            PW_KEY_APP_NAME, routeId_ == "chatgpt" ? "ChatGPT" : "Codex",
+            PW_KEY_APP_NAME,
+            routeId_ == "chatgpt" ? "ChatGPT" : routeId_ == "codex" ? "Codex" : "Grok Bot",
             "chatgpt.persona.voice.policy-probe", routeId_.c_str(),
             nullptr));
     if (probeStream_ == nullptr) {
@@ -1011,7 +1012,7 @@ int main(int argc, char** argv) {
     else {
       cpv::linux_audio::writeError(
           "invalid_arguments",
-          "Usage: cpv-audio-capture --self-test | --route <chatgpt|codex>",
+          "Usage: cpv-audio-capture --self-test | --route <chatgpt|codex|grok-bot>",
           false);
       return 2;
     }
@@ -1020,7 +1021,7 @@ int main(int argc, char** argv) {
   if ((selfTest && !routeId.empty()) || (!selfTest && !routeValid)) {
     cpv::linux_audio::writeError(
         "invalid_arguments",
-        "Usage: cpv-audio-capture --self-test | --route <chatgpt|codex>",
+        "Usage: cpv-audio-capture --self-test | --route <chatgpt|codex|grok-bot>",
         false);
     return 2;
   }

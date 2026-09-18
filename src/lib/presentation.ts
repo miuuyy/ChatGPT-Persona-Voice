@@ -99,7 +99,11 @@ export function statusLabel(snapshot: LauncherSnapshot, messages: Messages) {
 export function sourceLabel(settings: Settings, messages: Messages) {
   return settings.sourceMode === "codex-app-server"
     ? messages.runtime.codexSession
-    : settings.sourceName || messages.runtime.automaticApps;
+    : settings.sourceName || targetAppLabel(settings.targetApp);
+}
+
+export function targetAppLabel(targetApp: Settings["targetApp"]) {
+  return targetApp === "grok-bot" ? "Grok Bot" : "ChatGPT";
 }
 
 export function runtimeIsActive(snapshot: LauncherSnapshot) {

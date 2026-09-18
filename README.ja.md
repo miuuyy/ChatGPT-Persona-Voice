@@ -1,4 +1,4 @@
-<h1 align="center">ChatGPT と Codex の出力音声をカスタマイズ</h1>
+<h1 align="center">ChatGPT、Codex、Grok Bot の出力音声をカスタマイズ</h1>
 
 <p align="center">
   <strong>Persona Voice はアシスタントの音声をローカルで置き換え、ほぼリアルタイムで再生します。</strong>
@@ -23,12 +23,13 @@
 </p>
 
 <p align="center">
-  <img src="assets/architecture-models.svg" alt="選択したローカル音声モデルで ChatGPT と Codex の声を変換" width="1200">
+  <img src="assets/architecture-models.svg" alt="選択したローカル音声モデルで ChatGPT、Codex、Grok Bot の声を変換" width="1200">
 </p>
 
-Persona Voice は、ChatGPT と Codex の読み上げ音声を選んだ声に置き換えるデスクトップ
-アプリです。会話と操作は元のアプリに残り、音声変換はこのデバイス上で実行されます。
-品質とタイミングは、ハードウェア、入力音声、選択した参照音声によって変わります。
+Persona Voice は、ChatGPT、Codex、Grok Bot の読み上げ音声を選んだ声に置き換える
+デスクトップアプリです。取得元のアプリを一度選択すれば、会話と操作は元のアプリに残り、
+音声変換はこのデバイス上で実行されます。品質とタイミングは、ハードウェア、入力音声、
+選択した参照音声によって変わります。
 
 ## 音声モデル
 
@@ -51,6 +52,8 @@ Persona Voice は、ChatGPT と Codex の読み上げ音声を選んだ声に置
   音声経路によって異なります。
 - **元の声へ重ねず、置き換える。** Persona Voice は選択アプリの元の再生音を
   抑制し、変換済みの声をスピーカーへ送ります。
+- **複数の音声アプリに 1 つのリレー。** モデル、声、ローカル変換パイプラインを変えずに、
+  ChatGPT（Codex を含む）と Grok Bot を切り替えられます。
 - **ローカル推論。** インストール後の変換は手元の端末で実行されます。音声 API キーは不要です。
 - **プリセットとローカル参照音声。** クレジット付き VOICEVOX キャラクターと、少数の
   コミュニティ／デモ参照音声を収録しています。使用権限のある非公開の参照音声も追加できます。
@@ -62,7 +65,7 @@ Persona Voice は、ChatGPT と Codex の読み上げ音声を選んだ声に置
 ## 仕組み
 
 ```text
-ChatGPT / Codex アプリ
+ChatGPT / Codex または Grok Bot
         │ 音声出力
         ▼
 Persona Voice の音声経路
@@ -92,9 +95,9 @@ Windows、Linux 版をダウンロードできます。Windows の設定画面�
 [VB-CABLE](https://vb-audio.com/Cable/) を開き、別途インストールして Windows を再起動した後、
 アプリ内の音量ミキサー手順に従ってください。
 
-1. Persona Voice を起動し、モデルを1つ選んでダウンロードし、システム音声を設定します。
-2. ChatGPT または Codex を開き、Persona Voice で対象アプリと変換先の声を選びます。
-3. **音声を開始** を押し、ChatGPT または Codex で音声モードを開始します。
+1. Persona Voice を起動し、**ChatGPT** または **Grok Bot** を選び、システム音声を設定してモデルを1つダウンロードします。
+2. 変換先の声を選び、**音声を開始** を押します。
+3. 選んだアプリで通常どおり音声モードを開始します。
 
 必要条件は[プラットフォーム状況](#プラットフォーム状況)、セットアップで止まる場合は
 [トラブルシューティング](docs/TROUBLESHOOTING.md) を参照してください。
@@ -195,6 +198,7 @@ GPL-3.0 のままであり、モデル、参照音声、依存関係には各自
 
 ## 免責事項
 
-Codex Persona Voice は独立したソフトウェアであり、OpenAI との提携や承認関係は
-ありません。ChatGPT、Codex、OpenAI の商標は OpenAI に帰属します。本プロジェクトは、
-認証、サブスクリプション、権限、アクセス制御を回避するものではありません。
+Persona Voice は独立したソフトウェアであり、OpenAI、xAI、Cursor との提携や承認関係は
+ありません。ChatGPT、Codex、OpenAI、Grok、Grok Bot、xAI、Cursor の名称と商標は、
+それぞれの権利者に帰属します。本プロジェクトは、認証、サブスクリプション、権限、
+アクセス制御を回避するものではありません。

@@ -2,6 +2,7 @@
 
 const fs = require("node:fs");
 const { writePrivateFileAtomic } = require("./atomic-file.cjs");
+const { DEFAULT_TARGET_APP, requireTargetApp } = require("./target-apps.cjs");
 const { requireVoiceModel } = require("./voice-models.cjs");
 
 const STATE_VERSION = 1;
@@ -12,6 +13,7 @@ const UI_LOCALES = new Set(["en", "ja", "zh-CN"]);
 const DEFAULT_SETTINGS = Object.freeze({
   uiLocale: null,
   sourceMode: "desktop-application",
+  targetApp: DEFAULT_TARGET_APP,
   sourceId: null,
   sourceName: null,
   selectedModelId: "seed-vc",
@@ -58,6 +60,7 @@ function normalizeSettings(value) {
   }
   const sourceMode = value.sourceMode ?? DEFAULT_SETTINGS.sourceMode;
   if (!SOURCE_MODES.has(sourceMode)) throw new Error("Unknown audio source mode");
+  const targetApp = requireTargetApp(value.targetApp ?? DEFAULT_SETTINGS.targetApp);
   const selectedModelId = value.selectedModelId === undefined
     ? DEFAULT_SETTINGS.selectedModelId : value.selectedModelId;
   requireVoiceModel(selectedModelId);
@@ -99,6 +102,7 @@ function normalizeSettings(value) {
   return {
     uiLocale,
     sourceMode,
+    targetApp,
     sourceId,
     sourceName,
     selectedModelId,

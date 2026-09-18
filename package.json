@@ -2,7 +2,7 @@
   "name": "codex-persona-voice",
   "version": "0.1.6",
   "private": true,
-  "description": "Local-first realtime voice relay for Codex and ChatGPT",
+  "description": "Local-first realtime voice relay for ChatGPT, Codex, and Grok Bot",
   "author": "miuuyy",
   "license": "MIT",
   "repository": {
@@ -19,7 +19,8 @@
     "chatterbox",
     "electron",
     "chatgpt",
-    "codex"
+    "codex",
+    "grok-bot"
   ],
   "packageManager": "bun@1.3.14",
   "engineInstaller": {
@@ -144,7 +145,7 @@
         "Contents/Resources/updater-runtime/bun"
       ],
       "extendInfo": {
-        "NSAudioCaptureUsageDescription": "Codex Persona Voice captures output from the application you select so it can convert the voice locally before playback."
+        "NSAudioCaptureUsageDescription": "Persona Voice captures output from the voice application you select so it can convert speech locally before playback."
       },
       "target": [
         "dmg",

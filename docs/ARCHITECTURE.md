@@ -6,7 +6,7 @@ still needs clean physical-Windows end-to-end acceptance. This is not release as
 
 ## Product boundary
 
-Codex Persona Voice is a standalone, local-first desktop audio relay. It is not an MCP server, an
+Persona Voice is a standalone, local-first desktop audio relay. It is not an MCP server, an
 OpenAI component, or a Persona extension. It owns its renderer, settings, process discovery,
 platform audio route, conversion worker, output helper, and optional local history.
 
@@ -38,8 +38,8 @@ main-process handlers.
 
 ### macOS: Core Audio process tap
 
-The macOS path resolves stable application roots for a selected or automatic ChatGPT/Codex process
-tree and refreshes descendants while running. It initially observes process I/O without creating a
+The macOS path resolves stable application roots for the selected `targetApp`: ChatGPT (including
+its Codex experience) or Grok Bot. It refreshes descendants while running and initially observes process I/O without creating a
 tap. When the process tree has active input and new audible output, the helper creates a private
 Core Audio process tap and aggregate device, verifies the format and first frame, then engages
 `CATapMutedWhenTapped`. After input has stopped for 750 ms it restores `CATapUnmuted`, closes the
@@ -54,7 +54,7 @@ Chatterbox acceptance currently covers the owner's English comparison on one Mac
 The Linux platform-audio controller installs/removes versioned per-user policy in a worker thread and
 restarts the user audio services without restarting Persona Voice; playback pauses briefly while the
 app stays open. PipeWire creates an owned virtual
-ingress and passive bypass for deterministic `chatgpt`/`codex` routes. WirePlumber 0.4 or 0.5 policy
+ingress and passive bypass for deterministic `chatgpt`/`codex`/`grok-bot` routes. WirePlumber 0.4 or 0.5 policy
 matches supported application identities before normal target selection and links them to that
 ingress. While idle, the bypass forwards source PCM to the current physical default.
 
@@ -62,7 +62,7 @@ The native capture helper opens the owned ingress monitor, creates a guarded cap
 the pre-link policy and capture links, then mutes and rechecks the bypass before reporting
 `engaged`. It owns a 64-slot capture queue and reports topology restoration uncertainty if bypass
 unmute or helper shutdown cannot be proven. Source resolution combines PipeWire stream identity
-with `/proc` process trees and supports dynamic ChatGPT/Codex streams.
+with `/proc` process trees and supports dynamic ChatGPT/Codex and Grok Bot streams.
 
 The x64 `linux-x64-cuda130` engine profile and native PipeWire output helper complete the local data
 path. Live acceptance covers Ubuntu 24.04 with WirePlumber 0.4 and Fedora 42 with PipeWire 1.4.11 /
@@ -84,7 +84,8 @@ Converted PCM returns through a bounded WASAPI shared-render output helper. The 
 
 Persona Voice never downloads or bundles VB-CABLE. The in-app platform-audio step opens the official
 VB-Audio page, asks the user to install the signed driver and restart Windows, then guides assignment
-and starts standby verification. Users assign ChatGPT/Codex to **CABLE Input** in Volume Mixer and
+and starts standby verification. Users assign the selected ChatGPT or Grok Bot application to
+**CABLE Input** in Volume Mixer and
 restore it to Default or the physical device before removing VB-CABLE.
 
 Graceful Quit is blocked while the retained route may persist and requires user-confirmed
@@ -92,16 +93,10 @@ restoration. The OS does not expose proof that the persistent per-app preference
 crash/force-kill can leave the source assigned to VB-CABLE Input. Monitoring proves only current
 live sessions; `OnSessionCreated` is not guaranteed before a session's first sample.
 
-### Owned Codex realtime session: contract only
-
-An owned App Server session could receive assistant PCM before hardware playback and avoid OS route
-interception. The capability is described in the adapter architecture, but the source bridge is not
-implemented. Detecting the Codex CLI does not enable it.
-
 ## Data path
 
 ```text
-selected ChatGPT/Codex process tree
+selected ChatGPT/Codex or Grok Bot process tree
         │
         ▼
 platform route adapter
